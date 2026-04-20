@@ -70,13 +70,22 @@ type UninstallResult = {
   message: string;
 };
 
+type DebugReport = {
+  captured_at: string;
+  action: string;
+  message: string;
+  traceback: string;
+  args: unknown[];
+};
+
 type AppDetailsResponse = {
   strLaunchOptions?: string;
 };
 
 const scanLibrary = callable<[], ScanResult>("scan_library");
-const installFix = callable<[appid: number, profileId: string], InstallResult>("install_fix");
+const installAutoFix = callable<[appid: number], InstallResult>("install_auto_fix");
 const uninstallFix = callable<[appid: number], UninstallResult>("uninstall_fix");
+const getLastDebugReport = callable<[], DebugReport | null>("get_last_debug_report");
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error) {
@@ -283,11 +292,13 @@ function SupportSummary({ game }: { game: SupportedGame }) {
 function DetailsSection(props: {
   game: SupportedGame;
   busy: boolean;
-  onInstall: (profileId: string) => Promise<void>;
+  debugMode: boolean;
+  lastDebugReport: DebugReport | null;
+  onInstall: () => Promise<void>;
   onUninstall: () => Promise<void>;
   showTitle?: boolean;
 }) {
-  const { game, busy, onInstall, onUninstall, showTitle = true } = props;
+  const { game, busy, debugMode, lastDebugReport, onInstall, onUninstall, showTitle = true } = props;
   const [showTechnicalDetails, setShowTechnicalDetails] = useState(false);
   const status = getStatusPresentation(game);
 
@@ -319,23 +330,27 @@ function DetailsSection(props: {
           </div>
 
           <div style={{ fontSize: "12px", opacity: 0.8, lineHeight: 1.5 }}>
-            Choose a profile below to install or repair the fix for this game.
+            Install uses your current display automatically. You should not need to pick a resolution.
           </div>
         </div>
       </PanelSectionRow>
 
-      {game.profiles.map((profile) => (
-        <PanelSectionRow key={profile.id}>
-          <ButtonItem
-            layout="below"
-            description={profile.description}
-            onClick={() => void onInstall(profile.id)}
-            disabled={busy}
-          >
-            {busy ? "Working..." : `${profile.label} (${profile.resolution})`}
-          </ButtonItem>
-        </PanelSectionRow>
-      ))}
+      <PanelSectionRow>
+        <ButtonItem
+          layout="below"
+          description="Uses the automatic display profile and then tries to add the required FF7 launch option."
+          onClick={() => void onInstall()}
+          disabled={busy}
+        >
+          {busy
+            ? "Installing..."
+            : game.status === "repair"
+              ? "Repair Automatically"
+              : game.status === "managed"
+                ? "Reinstall Automatically"
+                : "Install Automatically"}
+        </ButtonItem>
+      </PanelSectionRow>
 
       {game.status === "managed" || game.status === "repair" ? (
         <PanelSectionRow>
@@ -367,6 +382,32 @@ function DetailsSection(props: {
           </div>
         </div>
       </PanelSectionRow>
+
+      {debugMode && lastDebugReport ? (
+        <PanelSectionRow>
+          <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "10px" }}>
+            <div style={{ fontWeight: 700 }}>Last Debug Report</div>
+            <div style={{ fontSize: "12px", opacity: 0.75 }}>
+              Captured: {lastDebugReport.captured_at} • Action: {lastDebugReport.action}
+            </div>
+            <div
+              style={{
+                whiteSpace: "pre-wrap",
+                fontFamily: "monospace",
+                fontSize: "10px",
+                lineHeight: 1.4,
+                background: "rgba(255,255,255,0.06)",
+                borderRadius: "8px",
+                padding: "10px",
+                maxHeight: "320px",
+                overflowY: "auto",
+              }}
+            >
+              {lastDebugReport.traceback}
+            </div>
+          </div>
+        </PanelSectionRow>
+      ) : null}
 
       <PanelSectionRow>
         <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "10px" }}>
@@ -501,12 +542,26 @@ function Content() {
   const [selectedAppId, setSelectedAppId] = useState<number | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [busyAppId, setBusyAppId] = useState<number | null>(null);
+  const [debugMode, setDebugMode] = useState<boolean>(false);
+  const [lastDebugReport, setLastDebugReport] = useState<DebugReport | null>(null);
+
+  const refreshDebugReport = async () => {
+    try {
+      const report = await getLastDebugReport();
+      setLastDebugReport(report);
+    } catch (error) {
+      console.error("Failed to load debug report:", error);
+    }
+  };
 
   const refreshScan = async () => {
     setLoading(true);
     try {
       const nextScan = await scanLibrary();
       setScan(nextScan);
+      if (debugMode) {
+        await refreshDebugReport();
+      }
 
       if (nextScan.supported_games.length === 0) {
         setSelectedAppId(null);
@@ -521,6 +576,9 @@ function Content() {
         title: "Scan failed",
         body: getErrorMessage(error),
       });
+      if (debugMode) {
+        await refreshDebugReport();
+      }
     } finally {
       setLoading(false);
     }
@@ -533,14 +591,14 @@ function Content() {
   const selectedGame =
     scan?.supported_games.find((game) => game.appid === selectedAppId) ?? null;
 
-  const handleInstall = async (profileId: string) => {
+  const handleInstall = async () => {
     if (!selectedGame) {
       return;
     }
 
     setBusyAppId(selectedGame.appid);
     try {
-      const result = await installFix(selectedGame.appid, profileId);
+      const result = await installAutoFix(selectedGame.appid);
       let launchOptionBody = "The fix files were installed.";
       try {
         const launchOptionResult = await ensureLaunchOption(
@@ -565,9 +623,14 @@ function Content() {
       });
       await refreshScan();
     } catch (error) {
+      if (debugMode) {
+        await refreshDebugReport();
+      }
       toaster.toast({
         title: "Install failed",
-        body: getErrorMessage(error),
+        body: debugMode
+          ? `${getErrorMessage(error)} Debug report captured below.`
+          : getErrorMessage(error),
       });
     } finally {
       setBusyAppId(null);
@@ -588,9 +651,14 @@ function Content() {
       });
       await refreshScan();
     } catch (error) {
+      if (debugMode) {
+        await refreshDebugReport();
+      }
       toaster.toast({
         title: "Uninstall failed",
-        body: getErrorMessage(error),
+        body: debugMode
+          ? `${getErrorMessage(error)} Debug report captured below.`
+          : getErrorMessage(error),
       });
     } finally {
       setBusyAppId(null);
@@ -600,6 +668,38 @@ function Content() {
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
       <LibraryHeader scan={scan} loading={loading} onRefresh={refreshScan} />
+
+      <PanelSection title="Debug">
+        <PanelSectionRow>
+          <div
+            style={{
+              width: "100%",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: "12px",
+            }}
+          >
+            <div style={{ fontSize: "12px", lineHeight: 1.4 }}>
+              {debugMode
+                ? "Debug mode is on. If install fails, a Python traceback will appear below."
+                : "Turn this on when you want a traceback on screen for troubleshooting."}
+            </div>
+            <DialogButton
+              onClick={() => {
+                const nextValue = !debugMode;
+                setDebugMode(nextValue);
+                if (nextValue) {
+                  void refreshDebugReport();
+                }
+              }}
+              style={{ minWidth: "140px" }}
+            >
+              {debugMode ? "Debug Mode On" : "Debug Mode Off"}
+            </DialogButton>
+          </div>
+        </PanelSectionRow>
+      </PanelSection>
 
       {scan && scan.supported_games.length === 0 ? <EmptyState /> : null}
 
@@ -615,6 +715,8 @@ function Content() {
         <DetailsSection
           game={selectedGame}
           busy={busyAppId === selectedGame.appid}
+          debugMode={debugMode}
+          lastDebugReport={lastDebugReport}
           onInstall={handleInstall}
           onUninstall={handleUninstall}
           showTitle={(scan?.supported_games.length ?? 0) > 1}

@@ -5,6 +5,7 @@ import json
 import re
 import shutil
 import subprocess
+import traceback
 import urllib.request
 import zipfile
 from datetime import datetime, timezone
@@ -28,6 +29,7 @@ class Plugin:
         self.install_records_dir = self.runtime_dir / "installs"
         self.backups_dir = self.runtime_dir / "backups"
         self.scan_cache_path = self.runtime_dir / "last_scan.json"
+        self.last_error_path = self.runtime_dir / "last_error.json"
 
     async def _main(self) -> None:
         self._ensure_dirs()
@@ -44,13 +46,23 @@ class Plugin:
         decky.logger.info("16:10 Fixes migration complete.")
 
     async def scan_library(self) -> dict[str, Any]:
-        return await asyncio.to_thread(self._scan_library_sync)
+        return await asyncio.to_thread(self._run_with_debug_capture, "scan_library", self._scan_library_sync)
 
     async def install_fix(self, appid: int, profile_id: str) -> dict[str, Any]:
-        return await asyncio.to_thread(self._install_fix_sync, int(appid), profile_id)
+        return await asyncio.to_thread(self._run_with_debug_capture, "install_fix", self._install_fix_sync, int(appid), profile_id)
+
+    async def install_auto_fix(self, appid: int) -> dict[str, Any]:
+        return await asyncio.to_thread(self._run_with_debug_capture, "install_auto_fix", self._install_auto_fix_sync, int(appid))
 
     async def uninstall_fix(self, appid: int) -> dict[str, Any]:
-        return await asyncio.to_thread(self._uninstall_fix_sync, int(appid))
+        return await asyncio.to_thread(self._run_with_debug_capture, "uninstall_fix", self._uninstall_fix_sync, int(appid))
+
+    async def get_last_debug_report(self) -> dict[str, Any] | None:
+        if not self.last_error_path.exists():
+            return None
+
+        with self.last_error_path.open("r", encoding="utf-8") as handle:
+            return json.load(handle)
 
     def _ensure_dirs(self) -> None:
         for path in (self.runtime_dir, self.cache_dir, self.install_records_dir, self.backups_dir):
@@ -64,6 +76,31 @@ class Plugin:
             int(game["appid"]): game
             for game in self.catalog.get("games", [])
         }
+
+    def _write_last_error(self, payload: dict[str, Any]) -> None:
+        with self.last_error_path.open("w", encoding="utf-8") as handle:
+            json.dump(payload, handle, indent=2)
+
+    def _clear_last_error(self) -> None:
+        if self.last_error_path.exists():
+            self.last_error_path.unlink()
+
+    def _run_with_debug_capture(self, action: str, fn: Any, *args: Any) -> Any:
+        try:
+            result = fn(*args)
+            self._clear_last_error()
+            return result
+        except Exception as error:
+            error_payload = {
+                "captured_at": utc_now_iso(),
+                "action": action,
+                "message": str(error),
+                "traceback": traceback.format_exc(),
+                "args": list(args),
+            }
+            self._write_last_error(error_payload)
+            decky.logger.error(f"{action} failed: {error_payload['traceback']}")
+            raise
 
     def _steam_root_candidates(self) -> list[Path]:
         user_home = Path(getattr(decky, "DECKY_USER_HOME"))
@@ -269,7 +306,7 @@ class Plugin:
         request = urllib.request.Request(
             url,
             headers={
-                "User-Agent": "decky-16x10-fixes/0.1.2",
+                "User-Agent": "decky-16x10-fixes/0.1.4",
                 "Accept": "application/octet-stream",
             },
         )
@@ -283,7 +320,7 @@ class Plugin:
                 temp_destination.unlink()
 
             curl_result = subprocess.run(
-                ["curl", "-L", "--fail", "-A", "decky-16x10-fixes/0.1.2", "-o", str(temp_destination), url],
+                ["curl", "-L", "--fail", "-A", "decky-16x10-fixes/0.1.4", "-o", str(temp_destination), url],
                 capture_output=True,
                 text=True,
                 check=False,
@@ -349,6 +386,31 @@ class Plugin:
 
         with ini_path.open("w", encoding="utf-8") as handle:
             handle.writelines(output_lines)
+
+    def _get_auto_profile(self, catalog_entry: dict[str, Any]) -> dict[str, Any]:
+        profiles = catalog_entry.get("profiles", [])
+        auto_profile_id = catalog_entry.get("auto_profile_id")
+        if auto_profile_id:
+            profile = next((item for item in profiles if item["id"] == auto_profile_id), None)
+            if profile:
+                return profile
+
+        profile = next((item for item in profiles if item.get("resolution") == "Auto"), None)
+        if profile:
+            return profile
+
+        if profiles:
+            return profiles[0]
+
+        raise RuntimeError("No install profiles are configured for this game.")
+
+    def _install_auto_fix_sync(self, appid: int) -> dict[str, Any]:
+        catalog_entry = self.catalog_by_appid.get(appid)
+        if not catalog_entry:
+            raise RuntimeError("That game is not in the curated fix catalog yet.")
+
+        profile = self._get_auto_profile(catalog_entry)
+        return self._install_fix_sync(appid, profile["id"])
 
     def _install_fix_sync(self, appid: int, profile_id: str) -> dict[str, Any]:
         catalog_entry = self.catalog_by_appid.get(appid)

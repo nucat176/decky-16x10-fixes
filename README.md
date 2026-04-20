@@ -104,26 +104,24 @@ Once the plugin is installed:
 2. Open the `16:10 Fixes` plugin from Decky.
 3. Press `Scan Installed Steam Library`.
 4. Select `Final Fantasy VII Remake Intergrade`.
-5. Pick one of these profiles:
-   - `Steam Deck 1280x800`
-   - `External 1920x1200`
-   - `Use Current Display`
+5. Press `Install Automatically`.
 6. Wait for the install to finish.
 7. Launch the game normally from Steam.
 
 That is it.
 
-The plugin will try to handle the file install and the required Proton launch option for you.
+The plugin will use the automatic display profile, handle the file install, and try to add the required Proton launch option for you.
 If SteamOS refuses the automatic launch-option update, use the `Copy Launch Option`
 button in the FF7 details panel and paste it into Steam `Properties` → `Launch Options`.
 
-## Which FF7 Profile Should I Pick?
+## Debug Mode
 
-Use this quick rule:
+If install still fails:
 
-- Pick `Steam Deck 1280x800` if you are playing on the Deck screen.
-- Pick `External 1920x1200` if you are docked to a 16:10 external display or you specifically want that target.
-- Pick `Use Current Display` if you want FF7RemakeFix to follow the current desktop/display resolution.
+1. Turn on `Debug Mode` in the plugin.
+2. Try `Install Automatically` again.
+3. The plugin will show a traceback on screen in a `Last Debug Report` section.
+4. Take a photo of that screen and send it over.
 
 ## If Something Goes Wrong
 
