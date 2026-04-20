@@ -1,0 +1,11 @@
+{
+  "name": "16:10 Fixes",
+  "author": "Adam Foosaner",
+  "flags": [],
+  "api_version": 1,
+  "publish": {
+    "tags": ["aspect-ratio", "16:10", "steam-deck", "installer", "ff7"],
+    "description": "Scan installed Steam games and install curated 16:10 fixes from Game Mode.",
+    "image": "https://opengraph.githubassets.com/1/SteamDeckHomebrew/decky-loader"
+  }
+}

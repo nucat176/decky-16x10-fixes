@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "games": [
+    {
+      "appid": 1462040,
+      "slug": "ff7-remake",
+      "title": "FINAL FANTASY VII REMAKE INTERGRADE",
+      "display_title": "Final Fantasy VII Remake Intergrade",
+      "source": {
+        "name": "FF7RemakeFix",
+        "repo": "Lyall/FF7RemakeFix",
+        "version": "v0.0.2",
+        "source_url": "https://github.com/Lyall/FF7RemakeFix/releases/tag/v0.0.2",
+        "download_url": "https://github.com/Lyall/FF7RemakeFix/releases/download/v0.0.2/FF7RemakeFix_v0.0.2.zip",
+        "asset_name": "FF7RemakeFix_v0.0.2.zip"
+      },
+      "install": {
+        "strategy": "extract_archive"
+      },
+      "managed_files": [
+        "End/Binaries/Win64/dsound.dll",
+        "End/Binaries/Win64/FF7RemakeFix.asi",
+        "End/Binaries/Win64/FF7RemakeFix.ini",
+        "End/Binaries/Win64/UltimateASILoader_LICENSE.md"
+      ],
+      "config": {
+        "type": "ini",
+        "path": "End/Binaries/Win64/FF7RemakeFix.ini"
+      },
+      "launch_options": {
+        "required": "WINEDLLOVERRIDES=\"dsound=n,b\" %command%",
+        "token": "dsound=n,b"
+      },
+      "supports": {
+        "gameplay_aspect_fix": true,
+        "hud_fix": true,
+        "movie_fix": true,
+        "custom_resolution": true
+      },
+      "install_notes": [
+        "The plugin downloads FF7RemakeFix from its public release page and installs it into the game folder.",
+        "The plugin also patches FF7RemakeFix.ini with the profile you choose.",
+        "Steam Deck/Linux still needs the dsound Wine override. The plugin will try to add it to launch options for you."
+      ],
+      "known_issues": [
+        "Some transition animations can still appear at the wrong aspect ratio.",
+        "Pre-rendered movie behavior is better with Fix Movies enabled, but a few edge cases may still look odd."
+      ],
+      "profiles": [
+        {
+          "id": "steam-deck-16-10",
+          "label": "Steam Deck 1280x800",
+          "description": "Internal-screen 16:10 profile for the Deck itself.",
+          "resolution": "1280x800",
+          "config_updates": {
+            "Custom Resolution": {
+              "Width": 1280,
+              "Height": 800
+            },
+            "Fix Aspect Ratio": {
+              "Enabled": true
+            },
+            "Fix HUD": {
+              "Enabled": true,
+              "ResScale": 0
+            },
+            "Fix Movies": {
+              "Enabled": true,
+              "Easing": true
+            },
+            "Vignette": {
+              "Auto": true,
+              "Strength": 0
+            }
+          }
+        },
+        {
+          "id": "external-1920x1200",
+          "label": "External 1920x1200",
+          "description": "For a 16:10 external display or a supersampled target.",
+          "resolution": "1920x1200",
+          "config_updates": {
+            "Custom Resolution": {
+              "Width": 1920,
+              "Height": 1200
+            },
+            "Fix Aspect Ratio": {
+              "Enabled": true
+            },
+            "Fix HUD": {
+              "Enabled": true,
+              "ResScale": 0
+            },
+            "Fix Movies": {
+              "Enabled": true,
+              "Easing": true
+            },
+            "Vignette": {
+              "Auto": true,
+              "Strength": 0
+            }
+          }
+        },
+        {
+          "id": "desktop-native",
+          "label": "Use Current Display",
+          "description": "Leaves width and height at 0 so the fix uses the current display resolution.",
+          "resolution": "Auto",
+          "config_updates": {
+            "Custom Resolution": {
+              "Width": 0,
+              "Height": 0
+            },
+            "Fix Aspect Ratio": {
+              "Enabled": true
+            },
+            "Fix HUD": {
+              "Enabled": true,
+              "ResScale": 0
+            },
+            "Fix Movies": {
+              "Enabled": true,
+              "Easing": true
+            },
+            "Vignette": {
+              "Auto": true,
+              "Strength": 0
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
