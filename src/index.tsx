@@ -224,6 +224,40 @@ function CopyLaunchOptionButton({ launchOption }: { launchOption: string }) {
   );
 }
 
+function getStatusPresentation(game: SupportedGame): {
+  label: string;
+  background: string;
+  color: string;
+} {
+  switch (game.status) {
+    case "managed":
+      return {
+        label: game.active_profile_label ? `Installed · ${game.active_profile_label}` : "Installed",
+        background: "rgba(64, 160, 93, 0.18)",
+        color: "#b8efc6",
+      };
+    case "repair":
+      return {
+        label: "Needs repair",
+        background: "rgba(196, 143, 44, 0.18)",
+        color: "#f6d482",
+      };
+    case "external":
+      return {
+        label: "Detected outside plugin",
+        background: "rgba(85, 135, 214, 0.18)",
+        color: "#b7d4ff",
+      };
+    case "available":
+    default:
+      return {
+        label: "Not installed",
+        background: "rgba(255, 255, 255, 0.08)",
+        color: "#f0f3f7",
+      };
+  }
+}
+
 function SupportSummary({ game }: { game: SupportedGame }) {
   const facts: string[] = [];
   if (game.supports.gameplay_aspect_fix) {
@@ -251,84 +285,211 @@ function DetailsSection(props: {
   busy: boolean;
   onInstall: (profileId: string) => Promise<void>;
   onUninstall: () => Promise<void>;
+  showTitle?: boolean;
 }) {
-  const { game, busy, onInstall, onUninstall } = props;
+  const { game, busy, onInstall, onUninstall, showTitle = true } = props;
+  const [showTechnicalDetails, setShowTechnicalDetails] = useState(false);
+  const status = getStatusPresentation(game);
 
   return (
-    <PanelSection title="Game Details">
+    <PanelSection title={showTitle ? "Game Details" : game.display_title}>
+      <PanelSectionRow>
+        <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "14px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              {showTitle ? (
+                <div style={{ fontWeight: 700, fontSize: "16px" }}>{game.display_title}</div>
+              ) : null}
+              <SupportSummary game={game} />
+            </div>
+            <div
+              style={{
+                background: status.background,
+                color: status.color,
+                borderRadius: "999px",
+                padding: "6px 12px",
+                fontSize: "12px",
+                fontWeight: 700,
+                textAlign: "center",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {status.label}
+            </div>
+          </div>
+
+          <div style={{ fontSize: "12px", opacity: 0.8, lineHeight: 1.5 }}>
+            Choose a profile below to install or repair the fix for this game.
+          </div>
+        </div>
+      </PanelSectionRow>
+
+      {game.profiles.map((profile) => (
+        <PanelSectionRow key={profile.id}>
+          <ButtonItem
+            layout="below"
+            description={profile.description}
+            onClick={() => void onInstall(profile.id)}
+            disabled={busy}
+          >
+            {busy ? "Working..." : `${profile.label} (${profile.resolution})`}
+          </ButtonItem>
+        </PanelSectionRow>
+      ))}
+
+      {game.status === "managed" || game.status === "repair" ? (
+        <PanelSectionRow>
+          <DialogButton onClick={() => void onUninstall()} disabled={busy} style={{ minWidth: "220px" }}>
+            {busy ? "Working..." : "Uninstall Managed Fix"}
+          </DialogButton>
+        </PanelSectionRow>
+      ) : null}
+
       <PanelSectionRow>
         <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "10px" }}>
-          <div style={{ fontWeight: 700 }}>{game.display_title}</div>
-          <div style={{ fontSize: "12px", opacity: 0.8 }}>{game.status_label}</div>
-          {game.active_profile_label ? (
-            <div style={{ fontSize: "12px", opacity: 0.8 }}>
-              Active profile: {game.active_profile_label}
+          <div style={{ fontWeight: 700 }}>Notes</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            <div style={{ fontSize: "12px", opacity: 0.75, fontWeight: 700 }}>What happens</div>
+            <ul style={{ margin: 0, paddingLeft: "18px", lineHeight: 1.5 }}>
+              {game.install_notes.map((note) => (
+                <li key={note}>{note}</li>
+              ))}
+            </ul>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            <div style={{ fontSize: "12px", opacity: 0.75, fontWeight: 700 }}>Things to know</div>
+            <ul style={{ margin: 0, paddingLeft: "18px", lineHeight: 1.5 }}>
+              {game.known_issues.map((issue) => (
+                <li key={issue}>{issue}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </PanelSectionRow>
+
+      <PanelSectionRow>
+        <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "10px" }}>
+          <DialogButton
+            onClick={() => setShowTechnicalDetails((current) => !current)}
+            style={{ minWidth: "220px" }}
+          >
+            {showTechnicalDetails ? "Hide Technical Details" : "Show Technical Details"}
+          </DialogButton>
+
+          {showTechnicalDetails ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              <div>
+                <div style={{ fontSize: "12px", opacity: 0.75 }}>Install path</div>
+                <div style={{ fontFamily: "monospace", fontSize: "11px", wordBreak: "break-word" }}>
+                  {game.install_path}
+                </div>
+              </div>
+
+              <div>
+                <div style={{ fontSize: "12px", opacity: 0.75 }}>Required launch option</div>
+                <div style={{ fontFamily: "monospace", fontSize: "11px", wordBreak: "break-word" }}>
+                  {game.launch_option}
+                </div>
+              </div>
+
+              <div style={{ fontSize: "12px", opacity: 0.75 }}>
+                Managed files found: {game.managed_files_present}/{game.managed_files_total}
+              </div>
+
+              <div style={{ fontSize: "12px", opacity: 0.75 }}>
+                Source: {game.source_name}
+              </div>
+
+              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                <CopyLaunchOptionButton launchOption={game.launch_option} />
+                <DialogButton
+                  onClick={() => Navigation.NavigateToExternalWeb(game.source_url)}
+                  style={{ minWidth: "180px" }}
+                >
+                  Open Source Page
+                </DialogButton>
+              </div>
             </div>
           ) : null}
-          <SupportSummary game={game} />
-
-          <div style={{ fontSize: "12px", opacity: 0.75 }}>Install path</div>
-          <div style={{ fontFamily: "monospace", fontSize: "11px", wordBreak: "break-word" }}>
-            {game.install_path}
-          </div>
-
-          <div style={{ fontSize: "12px", opacity: 0.75 }}>Required launch option</div>
-          <div style={{ fontFamily: "monospace", fontSize: "11px", wordBreak: "break-word" }}>
-            {game.launch_option}
-          </div>
-
-          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-            <CopyLaunchOptionButton launchOption={game.launch_option} />
-            <DialogButton
-              onClick={() => Navigation.NavigateToExternalWeb(game.source_url)}
-              style={{ minWidth: "180px" }}
-            >
-              Open Source Page
-            </DialogButton>
-            {game.status === "managed" || game.status === "repair" ? (
-              <DialogButton onClick={() => void onUninstall()} disabled={busy} style={{ minWidth: "180px" }}>
-                {busy ? "Working..." : "Uninstall Managed Fix"}
-              </DialogButton>
-            ) : null}
-          </div>
         </div>
       </PanelSectionRow>
+    </PanelSection>
+  );
+}
 
+function LibraryHeader(props: {
+  scan: ScanResult | null;
+  loading: boolean;
+  onRefresh: () => Promise<void>;
+}) {
+  const { scan, loading, onRefresh } = props;
+
+  let summary = "Run a scan to look for supported 16:10 fixes.";
+  if (loading) {
+    summary = "Scanning installed Steam library...";
+  } else if (scan) {
+    summary = `${scan.supported_games_count} supported of ${scan.installed_games_count} installed`;
+  }
+
+  return (
+    <PanelSection title="Library">
       <PanelSectionRow>
-        <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "8px" }}>
-          <div style={{ fontWeight: 700 }}>Install Profiles</div>
-          {game.profiles.map((profile) => (
-            <DialogButton
-              key={profile.id}
-              onClick={() => void onInstall(profile.id)}
-              disabled={busy}
-              style={{ textAlign: "left", justifyContent: "flex-start" }}
-            >
-              {busy ? "Working..." : `${profile.label} (${profile.resolution})`}
-            </DialogButton>
-          ))}
+        <div
+          style={{
+            width: "100%",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: "12px",
+          }}
+        >
+          <div style={{ fontSize: "13px", lineHeight: 1.4 }}>{summary}</div>
+          <DialogButton onClick={() => void onRefresh()} disabled={loading} style={{ minWidth: "120px" }}>
+            {loading ? "Scanning..." : "Rescan"}
+          </DialogButton>
         </div>
       </PanelSectionRow>
+    </PanelSection>
+  );
+}
 
-      <PanelSectionRow>
-        <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "8px" }}>
-          <div style={{ fontWeight: 700 }}>What The Plugin Does</div>
-          <ul style={{ margin: 0, paddingLeft: "18px", lineHeight: 1.5 }}>
-            {game.install_notes.map((note) => (
-              <li key={note}>{note}</li>
-            ))}
-          </ul>
-        </div>
-      </PanelSectionRow>
+function SupportedGamesList(props: {
+  games: SupportedGame[];
+  selectedAppId: number | null;
+  onSelect: (appid: number) => void;
+}) {
+  const { games, selectedAppId, onSelect } = props;
 
+  if (games.length <= 1) {
+    return null;
+  }
+
+  return (
+    <PanelSection title="Supported Games">
+      {games.map((game) => (
+        <PanelSectionRow key={game.appid}>
+          <ButtonItem
+            layout="below"
+            description={game.status_label}
+            onClick={() => onSelect(game.appid)}
+          >
+            {selectedAppId === game.appid ? `${game.display_title} · Selected` : game.display_title}
+          </ButtonItem>
+        </PanelSectionRow>
+      ))}
+    </PanelSection>
+  );
+}
+
+function EmptyState() {
+  return (
+    <PanelSection title="No Supported Games Found">
       <PanelSectionRow>
-        <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "8px" }}>
-          <div style={{ fontWeight: 700 }}>Known Caveats</div>
-          <ul style={{ margin: 0, paddingLeft: "18px", lineHeight: 1.5 }}>
-            {game.known_issues.map((issue) => (
-              <li key={issue}>{issue}</li>
-            ))}
-          </ul>
+        <div style={{ fontSize: "12px", lineHeight: 1.5 }}>
+          This MVP currently ships with one curated game entry: FF7 Remake.
+          If the game is installed and the scan still shows nothing, double-check that
+          Steam can see the library folder and try scanning again.
         </div>
       </PanelSectionRow>
     </PanelSection>
@@ -438,53 +599,17 @@ function Content() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
-      <PanelSection title="Library Scan">
-        <PanelSectionRow>
-          <ButtonItem
-            layout="below"
-            onClick={() => void refreshScan()}
-          >
-            {loading ? "Scanning installed games..." : "Scan Installed Steam Library"}
-          </ButtonItem>
-        </PanelSectionRow>
-        <PanelSectionRow>
-          <div style={{ fontSize: "12px", lineHeight: 1.5 }}>
-            {scan ? (
-              <>
-                <div>Installed games found: {scan.installed_games_count}</div>
-                <div>Supported games found: {scan.supported_games_count}</div>
-                <div>Steam libraries checked: {scan.libraries.length}</div>
-              </>
-            ) : (
-              <div>Run a scan to look for supported 16:10 fixes.</div>
-            )}
-          </div>
-        </PanelSectionRow>
-      </PanelSection>
+      <LibraryHeader scan={scan} loading={loading} onRefresh={refreshScan} />
 
-      <PanelSection title="Supported Installed Games">
-        {scan && scan.supported_games.length > 0 ? (
-          scan.supported_games.map((game) => (
-            <PanelSectionRow key={game.appid}>
-              <ButtonItem
-                layout="below"
-                description={`${game.status_label} • ${game.managed_files_present}/${game.managed_files_total} managed files found`}
-                onClick={() => setSelectedAppId(game.appid)}
-              >
-                {game.display_title}
-              </ButtonItem>
-            </PanelSectionRow>
-          ))
-        ) : (
-          <PanelSectionRow>
-            <div style={{ fontSize: "12px", lineHeight: 1.5 }}>
-              This MVP currently ships with one curated game entry: FF7 Remake.
-              If the game is installed and the scan still shows nothing, double-check that
-              Steam can see the library folder and try scanning again.
-            </div>
-          </PanelSectionRow>
-        )}
-      </PanelSection>
+      {scan && scan.supported_games.length === 0 ? <EmptyState /> : null}
+
+      {scan ? (
+        <SupportedGamesList
+          games={scan.supported_games}
+          selectedAppId={selectedAppId}
+          onSelect={setSelectedAppId}
+        />
+      ) : null}
 
       {selectedGame ? (
         <DetailsSection
@@ -492,6 +617,7 @@ function Content() {
           busy={busyAppId === selectedGame.appid}
           onInstall={handleInstall}
           onUninstall={handleUninstall}
+          showTitle={(scan?.supported_games.length ?? 0) > 1}
         />
       ) : null}
     </div>
