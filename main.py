@@ -4,6 +4,7 @@ import asyncio
 import json
 import re
 import shutil
+import subprocess
 import urllib.request
 import zipfile
 from datetime import datetime, timezone
@@ -261,8 +262,41 @@ class Plugin:
             return
 
         destination.parent.mkdir(parents=True, exist_ok=True)
-        with urllib.request.urlopen(url) as response, destination.open("wb") as handle:
-            shutil.copyfileobj(response, handle)
+        temp_destination = destination.with_suffix(destination.suffix + ".tmp")
+        if temp_destination.exists():
+            temp_destination.unlink()
+
+        request = urllib.request.Request(
+            url,
+            headers={
+                "User-Agent": "decky-16x10-fixes/0.1.1",
+                "Accept": "application/octet-stream",
+            },
+        )
+
+        try:
+            with urllib.request.urlopen(request) as response, temp_destination.open("wb") as handle:
+                shutil.copyfileobj(response, handle)
+        except Exception as urllib_error:
+            decky.logger.warning(f"urllib download failed for {url}: {urllib_error}")
+            if temp_destination.exists():
+                temp_destination.unlink()
+
+            curl_result = subprocess.run(
+                ["curl", "-L", "--fail", "-A", "decky-16x10-fixes/0.1.1", "-o", str(temp_destination), url],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            if curl_result.returncode != 0:
+                if temp_destination.exists():
+                    temp_destination.unlink()
+                raise RuntimeError(
+                    "The plugin could not download the fix archive from GitHub. "
+                    f"curl said: {curl_result.stderr.strip() or curl_result.stdout.strip() or curl_result.returncode}"
+                ) from urllib_error
+
+        shutil.move(str(temp_destination), str(destination))
 
     def _serialise_ini_value(self, value: Any) -> str:
         if isinstance(value, bool):
@@ -355,11 +389,21 @@ class Plugin:
                     backup_target.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copy2(destination, backup_target)
 
-                with archive.open(relative_path, "r") as source_handle, destination.open("wb") as dest_handle:
-                    shutil.copyfileobj(source_handle, dest_handle)
+                try:
+                    with archive.open(relative_path, "r") as source_handle, destination.open("wb") as dest_handle:
+                        shutil.copyfileobj(source_handle, dest_handle)
+                except PermissionError as error:
+                    raise RuntimeError(
+                        "The plugin was not able to write into the game folder. "
+                        "Please make sure the game is fully closed and try again."
+                    ) from error
 
         ini_relative_path = catalog_entry["config"]["path"]
         ini_path = install_path / ini_relative_path
+        if not ini_path.exists():
+            raise RuntimeError(
+                "The FF7RemakeFix.ini file was not found after extraction, so the plugin could not finish setup."
+            )
         self._apply_ini_updates(ini_path, profile["config_updates"])
 
         install_record = {

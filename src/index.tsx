@@ -299,17 +299,27 @@ function Content() {
     setBusyAppId(selectedGame.appid);
     try {
       const result = await installFix(selectedGame.appid, profileId);
-      const launchOptionResult = await ensureLaunchOption(
-        selectedGame.appid,
-        result.launch_option,
-        result.launch_option_token,
-      );
+      let launchOptionBody = "The fix files were installed.";
+      try {
+        const launchOptionResult = await ensureLaunchOption(
+          selectedGame.appid,
+          result.launch_option,
+          result.launch_option_token,
+        );
+
+        launchOptionBody = launchOptionResult.changed
+          ? `${result.message} Launch options were updated too.`
+          : `${result.message} Your launch options already looked correct.`;
+      } catch (launchOptionError) {
+        launchOptionBody =
+          `${result.message} The plugin could not update Steam launch options automatically. ` +
+          `Please set this manually in FF7 Properties > Launch Options: ${result.launch_option}`;
+        console.error("Launch option auto-update failed:", launchOptionError);
+      }
 
       toaster.toast({
         title: "Fix installed",
-        body: launchOptionResult.changed
-          ? `${result.message} Launch options were updated too.`
-          : result.message,
+        body: launchOptionBody,
       });
       await refreshScan();
     } catch (error) {
