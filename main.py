@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -316,16 +317,31 @@ class Plugin:
         if temp_destination.exists():
             temp_destination.unlink()
 
+        curl_env = dict(os.environ)
+        for env_key in (
+            "LD_LIBRARY_PATH",
+            "LD_PRELOAD",
+            "PYTHONHOME",
+            "PYTHONPATH",
+            "PYTHONUSERBASE",
+            "SSL_CERT_FILE",
+            "SSL_CERT_DIR",
+        ):
+            curl_env.pop(env_key, None)
+
+        curl_env["PATH"] = "/usr/bin:/bin:/usr/sbin:/sbin"
+        curl_env["HOME"] = str(Path(getattr(decky, "DECKY_USER_HOME")))
+
         def run_curl_command(extra_args: list[str]) -> subprocess.CompletedProcess[str]:
             return subprocess.run(
                 [
-                    "curl",
+                    "/usr/bin/curl",
                     "-L",
                     "--fail",
                     "--silent",
                     "--show-error",
                     "-A",
-                    "decky-16x10-fixes/0.1.5",
+                    "decky-16x10-fixes/0.1.6",
                     *extra_args,
                     "-o",
                     str(temp_destination),
@@ -334,6 +350,7 @@ class Plugin:
                 capture_output=True,
                 text=True,
                 check=False,
+                env=curl_env,
             )
 
         curl_result = run_curl_command([])
