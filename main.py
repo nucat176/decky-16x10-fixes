@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import re
 import shutil
 import subprocess
 import traceback
-import urllib.request
 import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -294,44 +294,83 @@ class Plugin:
                 return game
         raise RuntimeError("That supported game was not found in the installed Steam library scan.")
 
-    def _download_file(self, url: str, destination: Path) -> None:
+    def _sha256_file(self, path: Path) -> str:
+        digest = hashlib.sha256()
+        with path.open("rb") as handle:
+            for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                digest.update(chunk)
+        return digest.hexdigest()
+
+    def _download_file(self, url: str, destination: Path, expected_sha256: str | None = None) -> None:
         if destination.exists():
-            return
+            if expected_sha256:
+                actual_digest = self._sha256_file(destination)
+                if actual_digest == expected_sha256:
+                    return
+                destination.unlink()
+            else:
+                return
 
         destination.parent.mkdir(parents=True, exist_ok=True)
         temp_destination = destination.with_suffix(destination.suffix + ".tmp")
         if temp_destination.exists():
             temp_destination.unlink()
 
-        request = urllib.request.Request(
-            url,
-            headers={
-                "User-Agent": "decky-16x10-fixes/0.1.4",
-                "Accept": "application/octet-stream",
-            },
-        )
-
-        try:
-            with urllib.request.urlopen(request) as response, temp_destination.open("wb") as handle:
-                shutil.copyfileobj(response, handle)
-        except Exception as urllib_error:
-            decky.logger.warning(f"urllib download failed for {url}: {urllib_error}")
-            if temp_destination.exists():
-                temp_destination.unlink()
-
-            curl_result = subprocess.run(
-                ["curl", "-L", "--fail", "-A", "decky-16x10-fixes/0.1.4", "-o", str(temp_destination), url],
+        def run_curl_command(extra_args: list[str]) -> subprocess.CompletedProcess[str]:
+            return subprocess.run(
+                [
+                    "curl",
+                    "-L",
+                    "--fail",
+                    "--silent",
+                    "--show-error",
+                    "-A",
+                    "decky-16x10-fixes/0.1.5",
+                    *extra_args,
+                    "-o",
+                    str(temp_destination),
+                    url,
+                ],
                 capture_output=True,
                 text=True,
                 check=False,
             )
-            if curl_result.returncode != 0:
+
+        curl_result = run_curl_command([])
+        if curl_result.returncode != 0:
+            stderr = curl_result.stderr.strip()
+            stdout = curl_result.stdout.strip()
+            decky.logger.warning(f"curl download failed for {url}: {stderr or stdout or curl_result.returncode}")
+
+            ssl_keywords = ("SSL", "certificate", "issuer", "tls")
+            should_retry_insecure = any(keyword.lower() in stderr.lower() for keyword in ssl_keywords)
+            if should_retry_insecure and "github.com" in url:
+                if temp_destination.exists():
+                    temp_destination.unlink()
+                insecure_result = run_curl_command(["--insecure"])
+                if insecure_result.returncode != 0:
+                    if temp_destination.exists():
+                        temp_destination.unlink()
+                    raise RuntimeError(
+                        "The plugin could not download the fix archive from GitHub. "
+                        f"curl said: {insecure_result.stderr.strip() or insecure_result.stdout.strip() or insecure_result.returncode}"
+                    )
+                curl_result = insecure_result
+            else:
                 if temp_destination.exists():
                     temp_destination.unlink()
                 raise RuntimeError(
                     "The plugin could not download the fix archive from GitHub. "
-                    f"curl said: {curl_result.stderr.strip() or curl_result.stdout.strip() or curl_result.returncode}"
-                ) from urllib_error
+                    f"curl said: {stderr or stdout or curl_result.returncode}"
+                )
+
+        if expected_sha256:
+            actual_digest = self._sha256_file(temp_destination)
+            if actual_digest != expected_sha256:
+                temp_destination.unlink(missing_ok=True)
+                raise RuntimeError(
+                    "The downloaded fix archive did not match the expected checksum, so the install was stopped."
+                )
 
         shutil.move(str(temp_destination), str(destination))
 
@@ -431,7 +470,7 @@ class Plugin:
 
         source = catalog_entry["source"]
         cache_path = self.cache_dir / source["asset_name"]
-        self._download_file(source["download_url"], cache_path)
+        self._download_file(source["download_url"], cache_path, source.get("sha256"))
 
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
         backup_dir = self.backups_dir / str(appid) / timestamp

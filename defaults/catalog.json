@@ -12,7 +12,8 @@
         "version": "v0.0.2",
         "source_url": "https://github.com/Lyall/FF7RemakeFix/releases/tag/v0.0.2",
         "download_url": "https://github.com/Lyall/FF7RemakeFix/releases/download/v0.0.2/FF7RemakeFix_v0.0.2.zip",
-        "asset_name": "FF7RemakeFix_v0.0.2.zip"
+        "asset_name": "FF7RemakeFix_v0.0.2.zip",
+        "sha256": "5d8c85ac3e676e1cecd2591febcd38b9159455f05a0e379776c1c5f127c2340c"
       },
       "auto_profile_id": "desktop-native",
       "install": {
