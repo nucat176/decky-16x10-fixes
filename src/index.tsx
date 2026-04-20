@@ -85,6 +85,37 @@ function getErrorMessage(error: unknown): string {
   return String(error);
 }
 
+async function copyToClipboard(text: string): Promise<boolean> {
+  const tempInput = document.createElement("input");
+  tempInput.value = text;
+  tempInput.style.position = "absolute";
+  tempInput.style.left = "-9999px";
+  document.body.appendChild(tempInput);
+
+  try {
+    tempInput.focus();
+    tempInput.select();
+
+    try {
+      if (document.execCommand("copy")) {
+        return true;
+      }
+    } catch (copyError) {
+      console.error("execCommand copy failed:", copyError);
+    }
+
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch (clipboardError) {
+      console.error("navigator clipboard copy failed:", clipboardError);
+      return false;
+    }
+  } finally {
+    document.body.removeChild(tempInput);
+  }
+}
+
 function mergeLaunchOptions(existing: string, required: string, token: string): { changed: boolean; value: string } {
   const trimmedExisting = existing.trim();
   if (trimmedExisting.includes(token)) {
@@ -144,6 +175,55 @@ async function ensureLaunchOption(appid: number, required: string, token: string
   return { changed: true };
 }
 
+function CopyLaunchOptionButton({ launchOption }: { launchOption: string }) {
+  const [isLoading, setIsLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  useEffect(() => {
+    if (!showSuccess) {
+      return undefined;
+    }
+
+    const timerId = window.setTimeout(() => {
+      setShowSuccess(false);
+    }, 2500);
+
+    return () => window.clearTimeout(timerId);
+  }, [showSuccess]);
+
+  const handleCopy = async () => {
+    if (isLoading || showSuccess) {
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const copied = await copyToClipboard(launchOption);
+      if (!copied) {
+        toaster.toast({
+          title: "Copy failed",
+          body: "The plugin could not copy the launch option to the clipboard.",
+        });
+        return;
+      }
+
+      setShowSuccess(true);
+      toaster.toast({
+        title: "Copied",
+        body: "The FF7 launch option is now in your clipboard.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <DialogButton onClick={() => void handleCopy()} disabled={isLoading || showSuccess} style={{ minWidth: "180px" }}>
+      {showSuccess ? "Copied Launch Option" : isLoading ? "Copying..." : "Copy Launch Option"}
+    </DialogButton>
+  );
+}
+
 function SupportSummary({ game }: { game: SupportedGame }) {
   const facts: string[] = [];
   if (game.supports.gameplay_aspect_fix) {
@@ -198,6 +278,7 @@ function DetailsSection(props: {
           </div>
 
           <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+            <CopyLaunchOptionButton launchOption={game.launch_option} />
             <DialogButton
               onClick={() => Navigation.NavigateToExternalWeb(game.source_url)}
               style={{ minWidth: "180px" }}

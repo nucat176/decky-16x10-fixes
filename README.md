@@ -114,6 +114,8 @@ Once the plugin is installed:
 That is it.
 
 The plugin will try to handle the file install and the required Proton launch option for you.
+If SteamOS refuses the automatic launch-option update, use the `Copy Launch Option`
+button in the FF7 details panel and paste it into Steam `Properties` → `Launch Options`.
 
 ## Which FF7 Profile Should I Pick?
 

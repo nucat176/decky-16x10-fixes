@@ -269,7 +269,7 @@ class Plugin:
         request = urllib.request.Request(
             url,
             headers={
-                "User-Agent": "decky-16x10-fixes/0.1.1",
+                "User-Agent": "decky-16x10-fixes/0.1.2",
                 "Accept": "application/octet-stream",
             },
         )
@@ -283,7 +283,7 @@ class Plugin:
                 temp_destination.unlink()
 
             curl_result = subprocess.run(
-                ["curl", "-L", "--fail", "-A", "decky-16x10-fixes/0.1.1", "-o", str(temp_destination), url],
+                ["curl", "-L", "--fail", "-A", "decky-16x10-fixes/0.1.2", "-o", str(temp_destination), url],
                 capture_output=True,
                 text=True,
                 check=False,
