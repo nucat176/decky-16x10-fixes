@@ -17,27 +17,36 @@ Its job is simple:
 - install that fix from inside Game Mode
 - apply a safe preset so you do not need to move files around by hand
 
-This first version is intentionally small and cautious.
+This release is intentionally curated and cautious.
 
 Right now it supports:
 
 - `Final Fantasy VII Remake Intergrade`
+- `Octopath Traveler`
+- `Octopath Traveler II`
 
-The long-term goal is a curated library scanner for many games, but the first release is focused on getting one real game working cleanly.
+The long-term goal is still a broader library scanner, but every supported title should have a real, tested install flow.
 
-## What This Plugin Does For FF7 Remake
+## What This Plugin Does
 
-When you install the FF7 profile from the plugin, it will:
+When you install a supported game from the plugin, it will:
 
-1. Find your FF7 Remake install folder.
-2. Download `FF7RemakeFix` from its public release page.
+1. Find the game install folder in your Steam library.
+2. Download the matching fix from its public release page.
 3. Copy the fix files into the game folder.
-4. Patch `FF7RemakeFix.ini` with the profile you picked.
+4. Patch the `.ini` with a safe preset.
 5. Try to add the required Proton launch option automatically.
 
-For FF7, the required launch option is:
+Current launch options by game:
 
 ```text
+Final Fantasy VII Remake Intergrade
+WINEDLLOVERRIDES="dsound=n,b" %command%
+
+Octopath Traveler
+WINEDLLOVERRIDES="d3d11.dll=n,b" %command%
+
+Octopath Traveler II
 WINEDLLOVERRIDES="dsound=n,b" %command%
 ```
 
@@ -49,6 +58,7 @@ Please keep these expectations in mind:
 
 - Some games only fix gameplay and still have odd cutscenes or overlays.
 - FF7 is much better with the fix installed, but some transitions can still look wrong.
+- The two Octopath fixes keep the HUD centered to 16:9 by design.
 - This plugin only manages games that are explicitly in its curated catalog.
 - The first release is meant for single-player use cases like FF7, not competitive anti-cheat games.
 
@@ -96,23 +106,23 @@ Still in Game Mode:
 
 After that, the plugin should appear in your Decky plugin list as `16:10 Fixes`.
 
-## Super Simple FF7 Use Instructions
+## Super Simple Use Instructions
 
 Once the plugin is installed:
 
-1. Make sure `Final Fantasy VII Remake Intergrade` is already installed through Steam.
+1. Make sure one of the supported games is already installed through Steam.
 2. Open the `16:10 Fixes` plugin from Decky.
-3. Press `Scan Installed Steam Library`.
-4. Select `Final Fantasy VII Remake Intergrade`.
+3. Press `Rescan`.
+4. Select the game you want to fix.
 5. Press `Install Automatically`.
 6. Wait for the install to finish.
 7. Launch the game normally from Steam.
 
 That is it.
 
-The plugin will use the automatic display profile, handle the file install, and try to add the required Proton launch option for you.
+The plugin will handle the file install, apply the curated preset, and try to add the required Proton launch option for you.
 If SteamOS refuses the automatic launch-option update, use the `Copy Launch Option`
-button in the FF7 details panel and paste it into Steam `Properties` → `Launch Options`.
+button in the game's `Technical Details` panel and paste it into Steam `Properties` → `Launch Options`.
 
 ## Debug Mode
 
@@ -181,21 +191,34 @@ The folder should contain at least:
 
 Then restart Decky Loader or reboot the Steam Deck.
 
-## Files The Plugin Currently Manages For FF7
+## Files The Plugin Currently Manages
 
-These are the files the plugin installs into the game folder:
+For `Final Fantasy VII Remake Intergrade`:
 
 - `End/Binaries/Win64/dsound.dll`
 - `End/Binaries/Win64/FF7RemakeFix.asi`
 - `End/Binaries/Win64/FF7RemakeFix.ini`
 - `End/Binaries/Win64/UltimateASILoader_LICENSE.md`
 
+For `Octopath Traveler`:
+
+- `Octopath_Traveler/Binaries/Win64/d3d11.dll`
+- `Octopath_Traveler/Binaries/Win64/OctopathFix.asi`
+- `Octopath_Traveler/Binaries/Win64/OctopathFix.ini`
+
+For `Octopath Traveler II`:
+
+- `Octopath_Traveler2/Binaries/Win64/dsound.dll`
+- `Octopath_Traveler2/Binaries/Win64/Octopath2Fix.asi`
+- `Octopath_Traveler2/Binaries/Win64/Octopath2Fix.ini`
+- `Octopath_Traveler2/Binaries/Win64/UltimateASILoader_LICENSE.md`
+
 ## Current Scope
 
 This first version is intentionally narrow:
 
 - one curated catalog file
-- one supported title
+- three supported titles
 - scan, install, reinstall, and uninstall support
 - beginner-friendly workflow in Game Mode
 
@@ -207,3 +230,5 @@ The product only gets more useful if users can trust that "supported" really mea
 
 - Decky Loader: [https://github.com/SteamDeckHomebrew/decky-loader](https://github.com/SteamDeckHomebrew/decky-loader)
 - FF7RemakeFix by Lyall: [https://github.com/Lyall/FF7RemakeFix](https://github.com/Lyall/FF7RemakeFix)
+- OctopathFix by Lyall: [https://github.com/Lyall/OctopathFix](https://github.com/Lyall/OctopathFix)
+- Octopath2Fix by Lyall: [https://github.com/Lyall/Octopath2Fix](https://github.com/Lyall/Octopath2Fix)

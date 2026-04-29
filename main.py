@@ -341,7 +341,7 @@ class Plugin:
                     "--silent",
                     "--show-error",
                     "-A",
-                    "decky-16x10-fixes/0.1.6",
+                    "decky-16x10-fixes/0.1.7",
                     *extra_args,
                     "-o",
                     str(temp_destination),

@@ -528,7 +528,8 @@ function EmptyState() {
     <PanelSection title="No Supported Games Found">
       <PanelSectionRow>
         <div style={{ fontSize: "12px", lineHeight: 1.5 }}>
-          This MVP currently ships with one curated game entry: FF7 Remake.
+          This plugin currently ships with curated entries for FF7 Remake, Octopath Traveler,
+          and Octopath Traveler II.
           If the game is installed and the scan still shows nothing, double-check that
           Steam can see the library folder and try scanning again.
         </div>

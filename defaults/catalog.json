@@ -41,7 +41,7 @@
       },
       "install_notes": [
         "The plugin downloads FF7RemakeFix from its public release page and installs it into the game folder.",
-        "The plugin also patches FF7RemakeFix.ini with the profile you choose.",
+        "The plugin patches FF7RemakeFix.ini with the automatic display profile.",
         "Steam Deck/Linux still needs the dsound Wine override. The plugin will try to add it to launch options for you."
       ],
       "known_issues": [
@@ -127,6 +127,152 @@
             "Vignette": {
               "Auto": true,
               "Strength": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "appid": 921570,
+      "slug": "octopath-traveler",
+      "title": "OCTOPATH TRAVELER™",
+      "display_title": "Octopath Traveler",
+      "source": {
+        "name": "OctopathFix",
+        "repo": "Lyall/OctopathFix",
+        "version": "v0.0.1",
+        "source_url": "https://github.com/Lyall/OctopathFix/releases/tag/v0.0.1",
+        "download_url": "https://github.com/Lyall/OctopathFix/releases/download/v0.0.1/OctopathFix_v0_0_1.zip",
+        "asset_name": "OctopathFix_v0_0_1.zip",
+        "sha256": "bbe0d24f649ed3044523fd2ea18b9ac36a977e6e62038cd378f1264c7271d4fc"
+      },
+      "auto_profile_id": "current-display",
+      "install": {
+        "strategy": "extract_archive"
+      },
+      "managed_files": [
+        "Octopath_Traveler/Binaries/Win64/d3d11.dll",
+        "Octopath_Traveler/Binaries/Win64/OctopathFix.asi",
+        "Octopath_Traveler/Binaries/Win64/OctopathFix.ini"
+      ],
+      "config": {
+        "type": "ini",
+        "path": "Octopath_Traveler/Binaries/Win64/OctopathFix.ini"
+      },
+      "launch_options": {
+        "required": "WINEDLLOVERRIDES=\"d3d11.dll=n,b\" %command%",
+        "token": "d3d11.dll=n,b"
+      },
+      "supports": {
+        "gameplay_aspect_fix": true,
+        "hud_fix": true,
+        "movie_fix": false,
+        "custom_resolution": false
+      },
+      "install_notes": [
+        "The plugin downloads OctopathFix from its public release page and installs it into the game folder.",
+        "The game resolution still comes from Octopath Traveler itself. The fix removes pillarboxing and corrects FOV for non-16:9 displays.",
+        "The upstream fix keeps the HUD centered to 16:9.",
+        "Steam Deck/Linux still needs the d3d11 Wine override. The plugin will try to add it to launch options for you."
+      ],
+      "known_issues": [
+        "Screen fades and the battle wipe transitions are not spanned to fill the screen."
+      ],
+      "profiles": [
+        {
+          "id": "current-display",
+          "label": "Use Current Display",
+          "description": "Uses the resolution you already selected in the game, then applies the aspect-ratio and FOV fix.",
+          "resolution": "In-game",
+          "config_updates": {
+            "Fix Aspect Ratio": {
+              "Enabled": true
+            },
+            "Center HUD": {
+              "Enabled": true
+            },
+            "Fix HUD": {
+              "Enabled": true
+            },
+            "Fix FOV": {
+              "Enabled": true,
+              "AdditionalFOV": 0
+            },
+            "Uncap FPS": {
+              "Enabled": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "appid": 1971650,
+      "slug": "octopath-traveler-2",
+      "title": "OCTOPATH TRAVELER II",
+      "display_title": "Octopath Traveler II",
+      "source": {
+        "name": "Octopath2Fix",
+        "repo": "Lyall/Octopath2Fix",
+        "version": "v0.9.0",
+        "source_url": "https://github.com/Lyall/Octopath2Fix/releases/tag/v0.9.0",
+        "download_url": "https://github.com/Lyall/Octopath2Fix/releases/download/v0.9.0/Octopath2Fix_v0.9.0_Steam.zip",
+        "asset_name": "Octopath2Fix_v0.9.0_Steam.zip",
+        "sha256": "01ef68c02406aa146d816f111caea588046d0569d0f4c807bd3dd5b57a3b570b"
+      },
+      "auto_profile_id": "current-display",
+      "install": {
+        "strategy": "extract_archive"
+      },
+      "managed_files": [
+        "Octopath_Traveler2/Binaries/Win64/dsound.dll",
+        "Octopath_Traveler2/Binaries/Win64/Octopath2Fix.asi",
+        "Octopath_Traveler2/Binaries/Win64/Octopath2Fix.ini",
+        "Octopath_Traveler2/Binaries/Win64/UltimateASILoader_LICENSE.md"
+      ],
+      "config": {
+        "type": "ini",
+        "path": "Octopath_Traveler2/Binaries/Win64/Octopath2Fix.ini"
+      },
+      "launch_options": {
+        "required": "WINEDLLOVERRIDES=\"dsound=n,b\" %command%",
+        "token": "dsound=n,b"
+      },
+      "supports": {
+        "gameplay_aspect_fix": true,
+        "hud_fix": true,
+        "movie_fix": false,
+        "custom_resolution": false
+      },
+      "install_notes": [
+        "The plugin downloads Octopath2Fix from its public release page and installs it into the game folder.",
+        "The game resolution still comes from Octopath Traveler II itself. The fix removes pillarboxing and letterboxing, then corrects FOV.",
+        "The upstream fix keeps the HUD centered to 16:9.",
+        "Steam Deck/Linux still needs the dsound Wine override. The plugin will try to add it to launch options for you."
+      ],
+      "known_issues": [
+        "\"Porthole\" view through buildings is displayed at the wrong aspect ratio."
+      ],
+      "profiles": [
+        {
+          "id": "current-display",
+          "label": "Use Current Display",
+          "description": "Uses the resolution you already selected in the game, then applies the aspect-ratio and FOV fix.",
+          "resolution": "In-game",
+          "config_updates": {
+            "Fix Aspect Ratio": {
+              "Enabled": true
+            },
+            "Fix HUD": {
+              "Enabled": true
+            },
+            "Fix FOV": {
+              "Enabled": true
+            },
+            "Intro Skip": {
+              "Enabled": false
+            },
+            "Uncap FPS": {
+              "Enabled": false
             }
           }
         }
