@@ -86,18 +86,6 @@ class Plugin:
         if self.last_error_path.exists():
             self.last_error_path.unlink()
 
-    def _get_availability(self, catalog_entry: dict[str, Any]) -> tuple[bool, str | None]:
-        availability = catalog_entry.get("availability", {})
-        install_enabled = availability.get("install_enabled", True)
-        message = availability.get("message")
-        return bool(install_enabled), message
-
-    def _ensure_install_allowed(self, catalog_entry: dict[str, Any]) -> None:
-        install_enabled, message = self._get_availability(catalog_entry)
-        if install_enabled:
-            return
-        raise RuntimeError(message or "This fix is temporarily unavailable in the plugin.")
-
     def _run_with_debug_capture(self, action: str, fn: Any, *args: Any) -> Any:
         try:
             result = fn(*args)
@@ -224,8 +212,6 @@ class Plugin:
                     "supports": catalog_entry.get("supports", {}),
                     "install_notes": catalog_entry.get("install_notes", []),
                     "known_issues": catalog_entry.get("known_issues", []),
-                    "install_enabled": self._get_availability(catalog_entry)[0],
-                    "availability_message": self._get_availability(catalog_entry)[1],
                     "profiles": [
                         {
                             "id": profile["id"],
@@ -355,7 +341,7 @@ class Plugin:
                     "--silent",
                     "--show-error",
                     "-A",
-                    "decky-16x10-fixes/0.1.8",
+                    "decky-16x10-fixes/0.1.9",
                     *extra_args,
                     "-o",
                     str(temp_destination),
@@ -479,7 +465,6 @@ class Plugin:
         if not catalog_entry:
             raise RuntimeError("That game is not in the curated fix catalog yet.")
 
-        self._ensure_install_allowed(catalog_entry)
         profile = self._get_auto_profile(catalog_entry)
         return self._install_fix_sync(appid, profile["id"])
 
@@ -488,7 +473,6 @@ class Plugin:
         if not catalog_entry:
             raise RuntimeError("That game is not in the curated fix catalog yet.")
 
-        self._ensure_install_allowed(catalog_entry)
         game = self._find_game_install(appid)
         install_path = Path(game["install_path"])
         if not install_path.exists():
