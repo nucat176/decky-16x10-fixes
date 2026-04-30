@@ -31,6 +31,8 @@ type SupportedGame = {
   supports: Record<string, boolean>;
   install_notes: string[];
   known_issues: string[];
+  install_enabled: boolean;
+  availability_message?: string | null;
   profiles: FixProfile[];
   launch_option: string;
   launch_option_token: string;
@@ -238,6 +240,14 @@ function getStatusPresentation(game: SupportedGame): {
   background: string;
   color: string;
 } {
+  if (!game.install_enabled && game.status === "available") {
+    return {
+      label: "Temporarily unavailable",
+      background: "rgba(196, 143, 44, 0.18)",
+      color: "#f6d482",
+    };
+  }
+
   switch (game.status) {
     case "managed":
       return {
@@ -332,23 +342,44 @@ function DetailsSection(props: {
           <div style={{ fontSize: "12px", opacity: 0.8, lineHeight: 1.5 }}>
             Install uses your current display automatically. You should not need to pick a resolution.
           </div>
+
+          {!game.install_enabled && game.availability_message ? (
+            <div
+              style={{
+                fontSize: "12px",
+                lineHeight: 1.5,
+                background: "rgba(196, 143, 44, 0.12)",
+                border: "1px solid rgba(196, 143, 44, 0.28)",
+                borderRadius: "10px",
+                padding: "10px 12px",
+              }}
+            >
+              {game.availability_message}
+            </div>
+          ) : null}
         </div>
       </PanelSectionRow>
 
       <PanelSectionRow>
         <ButtonItem
           layout="below"
-          description="Uses the automatic display profile and then tries to add the required FF7 launch option."
+          description={
+            !game.install_enabled && game.availability_message
+              ? game.availability_message
+              : "Uses the automatic display profile and then tries to add the required launch option."
+          }
           onClick={() => void onInstall()}
-          disabled={busy}
+          disabled={busy || !game.install_enabled}
         >
-          {busy
-            ? "Installing..."
-            : game.status === "repair"
-              ? "Repair Automatically"
-              : game.status === "managed"
-                ? "Reinstall Automatically"
-                : "Install Automatically"}
+          {!game.install_enabled
+            ? "Install Temporarily Disabled"
+            : busy
+              ? "Installing..."
+              : game.status === "repair"
+                ? "Repair Automatically"
+                : game.status === "managed"
+                  ? "Reinstall Automatically"
+                  : "Install Automatically"}
         </ButtonItem>
       </PanelSectionRow>
 

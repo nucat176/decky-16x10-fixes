@@ -22,7 +22,7 @@ This release is intentionally curated and cautious.
 Right now it supports:
 
 - `Final Fantasy VII Remake Intergrade`
-- `Octopath Traveler`
+- `Octopath Traveler` (temporarily install-disabled while the current Steam build is revalidated)
 - `Octopath Traveler II`
 
 The long-term goal is still a broader library scanner, but every supported title should have a real, tested install flow.
@@ -59,6 +59,7 @@ Please keep these expectations in mind:
 - Some games only fix gameplay and still have odd cutscenes or overlays.
 - FF7 is much better with the fix installed, but some transitions can still look wrong.
 - The two Octopath fixes keep the HUD centered to 16:9 by design.
+- `Octopath Traveler` installs are temporarily disabled in the plugin because the current Steam build is crashing on launch with the upstream `OctopathFix` release.
 - This plugin only manages games that are explicitly in its curated catalog.
 - The first release is meant for single-player use cases like FF7, not competitive anti-cheat games.
 
