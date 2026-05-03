@@ -529,7 +529,7 @@ function EmptyState() {
       <PanelSectionRow>
         <div style={{ fontSize: "12px", lineHeight: 1.5 }}>
           This plugin currently ships with curated entries for FF7 Remake, Octopath Traveler,
-          and Octopath Traveler II.
+          Octopath Traveler II, and FF16.
           If the game is installed and the scan still shows nothing, double-check that
           Steam can see the library folder and try scanning again.
         </div>

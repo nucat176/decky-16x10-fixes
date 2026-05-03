@@ -277,6 +277,110 @@
           }
         }
       ]
+    },
+    {
+      "appid": 2515020,
+      "slug": "ff16",
+      "title": "FINAL FANTASY XVI",
+      "display_title": "Final Fantasy XVI",
+      "source": {
+        "name": "FFXVIFix",
+        "repo": "Lyall/FFXVIFix",
+        "version": "0.8.5",
+        "source_url": "https://codeberg.org/Lyall/FFXVIFix/releases/tag/0.8.5",
+        "download_url": "https://codeberg.org/Lyall/FFXVIFix/releases/download/0.8.5/FFXVIFix_0.8.5.zip",
+        "asset_name": "FFXVIFix_0.8.5.zip",
+        "sha256": "79afccda7e67b6f47d128adf04ff0cc61aa26e208a3be0c2845e0fbfb7e0eeed"
+      },
+      "auto_profile_id": "current-display",
+      "install": {
+        "strategy": "extract_archive"
+      },
+      "managed_files": [
+        "dinput8.dll",
+        "FFXVIFix.asi",
+        "FFXVIFix.ini"
+      ],
+      "config": {
+        "type": "ini",
+        "path": "FFXVIFix.ini"
+      },
+      "launch_options": {
+        "required": "WINEDLLOVERRIDES=\"dinput8=n,b\" %command%",
+        "token": "dinput8=n,b"
+      },
+      "supports": {
+        "gameplay_aspect_fix": true,
+        "hud_fix": true,
+        "movie_fix": true,
+        "custom_resolution": true
+      },
+      "install_notes": [
+        "The plugin downloads FFXVIFix from its public release page and installs it into the game folder.",
+        "The fix stops borderless and fullscreen resolutions from being scaled to 16:9.",
+        "The plugin sets the gameplay HUD to the 16:10 layout by default.",
+        "Steam Deck/Linux still needs the dinput8 Wine override. The plugin will try to add it to launch options for you."
+      ],
+      "known_issues": [
+        "Some movie cutscenes may appear stretched for some users. FFXVIFix has an Alternative movie option if this happens.",
+        "FF16 is demanding, so higher internal resolutions can cost a lot of performance on handhelds."
+      ],
+      "profiles": [
+        {
+          "id": "current-display",
+          "label": "Use Current Display",
+          "description": "Uses the current display resolution, applies the aspect-ratio fix, and selects the 16:10 HUD layout.",
+          "resolution": "Auto",
+          "config_updates": {
+            "Fix Resolution": {
+              "Enabled": true,
+              "WindowedResX": 0,
+              "WindowedResY": 0
+            },
+            "Fix HUD": {
+              "Enabled": true,
+              "HUDSize": 2
+            },
+            "Fix Movies": {
+              "Enabled": true,
+              "Alternative": false
+            },
+            "Fix FOV": {
+              "Enabled": true
+            },
+            "Gameplay Camera": {
+              "AdditionalFOV": 0,
+              "AdditionalFOVLockOn": 0,
+              "HorizontalPos": 0.95,
+              "VerticalPos": -0.65,
+              "DistanceMultiplier": 1
+            },
+            "Gameplay Tweaks": {
+              "AdjustStaggerTimers": false,
+              "AdjustDamageOutput": false
+            },
+            "Game Window": {
+              "BackgroundAudio": false,
+              "Resizable": false,
+              "DisableScreensaver": true
+            },
+            "Dynamic Resolution": {
+              "MaxResolution": 100,
+              "MinResolution": 50
+            },
+            "Remove 30FPS Cap": {
+              "Enabled": true,
+              "Framerate": 29.97
+            },
+            "Cutscene Frame Generation": {
+              "Enabled": true
+            },
+            "Disable Graphics Debugger Check": {
+              "Enabled": true
+            }
+          }
+        }
+      ]
     }
   ]
 }

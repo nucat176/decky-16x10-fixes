@@ -22,6 +22,7 @@ This release is intentionally curated and cautious.
 Right now it supports:
 
 - `Final Fantasy VII Remake Intergrade`
+- `Final Fantasy XVI`
 - `Octopath Traveler`
 - `Octopath Traveler II`
 
@@ -48,6 +49,9 @@ WINEDLLOVERRIDES="d3d11.dll=n,b" %command%
 
 Octopath Traveler II
 WINEDLLOVERRIDES="dsound=n,b" %command%
+
+Final Fantasy XVI
+WINEDLLOVERRIDES="dinput8=n,b" %command%
 ```
 
 ## Important Caveats
@@ -58,6 +62,7 @@ Please keep these expectations in mind:
 
 - Some games only fix gameplay and still have odd cutscenes or overlays.
 - FF7 is much better with the fix installed, but some transitions can still look wrong.
+- FF16 is demanding, so higher internal resolutions can cost a lot of performance on handhelds.
 - The two Octopath fixes keep the HUD centered to 16:9 by design.
 - This plugin only manages games that are explicitly in its curated catalog.
 - The first release is meant for single-player use cases like FF7, not competitive anti-cheat games.
@@ -213,12 +218,18 @@ For `Octopath Traveler II`:
 - `Octopath_Traveler2/Binaries/Win64/Octopath2Fix.ini`
 - `Octopath_Traveler2/Binaries/Win64/UltimateASILoader_LICENSE.md`
 
+For `Final Fantasy XVI`:
+
+- `dinput8.dll`
+- `FFXVIFix.asi`
+- `FFXVIFix.ini`
+
 ## Current Scope
 
 This first version is intentionally narrow:
 
 - one curated catalog file
-- three supported titles
+- four supported titles
 - scan, install, reinstall, and uninstall support
 - beginner-friendly workflow in Game Mode
 
@@ -230,5 +241,6 @@ The product only gets more useful if users can trust that "supported" really mea
 
 - Decky Loader: [https://github.com/SteamDeckHomebrew/decky-loader](https://github.com/SteamDeckHomebrew/decky-loader)
 - FF7RemakeFix by Lyall: [https://github.com/Lyall/FF7RemakeFix](https://github.com/Lyall/FF7RemakeFix)
+- FFXVIFix by Lyall: [https://codeberg.org/Lyall/FFXVIFix](https://codeberg.org/Lyall/FFXVIFix)
 - OctopathFix by Lyall: [https://github.com/Lyall/OctopathFix](https://github.com/Lyall/OctopathFix)
 - Octopath2Fix by Lyall: [https://github.com/Lyall/Octopath2Fix](https://github.com/Lyall/Octopath2Fix)

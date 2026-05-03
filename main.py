@@ -341,7 +341,7 @@ class Plugin:
                     "--silent",
                     "--show-error",
                     "-A",
-                    "decky-16x10-fixes/0.1.9",
+                    "decky-16x10-fixes/0.1.10",
                     *extra_args,
                     "-o",
                     str(temp_destination),
@@ -361,7 +361,8 @@ class Plugin:
 
             ssl_keywords = ("SSL", "certificate", "issuer", "tls")
             should_retry_insecure = any(keyword.lower() in stderr.lower() for keyword in ssl_keywords)
-            if should_retry_insecure and "github.com" in url:
+            hosts_with_verified_fallback = ("github.com", "codeberg.org")
+            if should_retry_insecure and any(host in url for host in hosts_with_verified_fallback):
                 if temp_destination.exists():
                     temp_destination.unlink()
                 insecure_result = run_curl_command(["--insecure"])
@@ -369,7 +370,7 @@ class Plugin:
                     if temp_destination.exists():
                         temp_destination.unlink()
                     raise RuntimeError(
-                        "The plugin could not download the fix archive from GitHub. "
+                        "The plugin could not download the fix archive. "
                         f"curl said: {insecure_result.stderr.strip() or insecure_result.stdout.strip() or insecure_result.returncode}"
                     )
                 curl_result = insecure_result
@@ -377,7 +378,7 @@ class Plugin:
                 if temp_destination.exists():
                     temp_destination.unlink()
                 raise RuntimeError(
-                    "The plugin could not download the fix archive from GitHub. "
+                    "The plugin could not download the fix archive. "
                     f"curl said: {stderr or stdout or curl_result.returncode}"
                 )
 
