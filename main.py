@@ -123,10 +123,19 @@ class Plugin:
                 extra_libraries = self._parse_libraryfolders_vdf(steamapps_dir / "libraryfolders.vdf")
                 library_paths.extend(extra_libraries)
 
+        # Dedup by the resolved on-disk path so that symlinked Steam roots
+        # (e.g. ~/.steam/steam and ~/.steam/root both point at ~/.local/share/Steam)
+        # collapse to a single entry instead of being scanned multiple times.
+        def _real_key(path: Path) -> str:
+            try:
+                return str(path.resolve())
+            except OSError:
+                return str(path)
+
         unique_roots: list[Path] = []
         seen_roots: set[str] = set()
         for root in steam_roots:
-            key = str(root)
+            key = _real_key(root)
             if key not in seen_roots:
                 seen_roots.add(key)
                 unique_roots.append(root)
@@ -134,7 +143,7 @@ class Plugin:
         unique_libraries: list[Path] = []
         seen_libraries: set[str] = set()
         for library in library_paths:
-            key = str(library)
+            key = _real_key(library)
             if key not in seen_libraries:
                 seen_libraries.add(key)
                 unique_libraries.append(library)
@@ -174,6 +183,7 @@ class Plugin:
         steam_roots, libraries = self._get_steam_library_paths()
         supported_games: list[dict[str, Any]] = []
         installed_games_count = 0
+        seen_appids: set[int] = set()
 
         for library in libraries:
             steamapps_dir = library / "steamapps"
@@ -185,8 +195,12 @@ class Plugin:
                 if not parsed:
                     continue
 
-                installed_games_count += 1
                 appid = int(parsed["appid"])
+                if appid in seen_appids:
+                    continue
+                seen_appids.add(appid)
+
+                installed_games_count += 1
                 catalog_entry = self.catalog_by_appid.get(appid)
                 if not catalog_entry:
                     continue
@@ -341,7 +355,7 @@ class Plugin:
                     "--silent",
                     "--show-error",
                     "-A",
-                    "decky-16x10-fixes/0.1.10",
+                    "decky-16x10-fixes/0.1.11",
                     *extra_args,
                     "-o",
                     str(temp_destination),
