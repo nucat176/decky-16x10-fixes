@@ -25,6 +25,7 @@ Right now it supports:
 - `Final Fantasy XVI`
 - `Octopath Traveler`
 - `Octopath Traveler II`
+- `Soul Hackers 2`
 
 The long-term goal is still a broader library scanner, but every supported title should have a real, tested install flow.
 
@@ -52,6 +53,9 @@ WINEDLLOVERRIDES="dsound=n,b" %command%
 
 Final Fantasy XVI
 WINEDLLOVERRIDES="dinput8=n,b" %command%
+
+Soul Hackers 2
+WINEDLLOVERRIDES="winhttp=n,b" %command%
 ```
 
 ## Important Caveats
@@ -64,6 +68,7 @@ Please keep these expectations in mind:
 - FF7 is much better with the fix installed, but some transitions can still look wrong.
 - FF16 is demanding, so higher internal resolutions can cost a lot of performance on handhelds.
 - The two Octopath fixes keep the HUD centered to 16:9 by design.
+- Soul Hackers 2 uses BepInEx, so its first launch after install can take longer than the ASI-based fixes.
 - This plugin only manages games that are explicitly in its curated catalog.
 - The first release is meant for single-player use cases like FF7, not competitive anti-cheat games.
 
@@ -224,12 +229,20 @@ For `Final Fantasy XVI`:
 - `FFXVIFix.asi`
 - `FFXVIFix.ini`
 
+For `Soul Hackers 2`:
+
+- `winhttp.dll`
+- `doorstop_config.ini`
+- `BepInEx/`
+- `dotnet/`
+- `BepInEx/config/SoulHackers2Fix.cfg`
+
 ## Current Scope
 
 This first version is intentionally narrow:
 
 - one curated catalog file
-- four supported titles
+- five supported titles
 - scan, install, reinstall, and uninstall support
 - beginner-friendly workflow in Game Mode
 
@@ -244,3 +257,4 @@ The product only gets more useful if users can trust that "supported" really mea
 - FFXVIFix by Lyall: [https://codeberg.org/Lyall/FFXVIFix](https://codeberg.org/Lyall/FFXVIFix)
 - OctopathFix by Lyall: [https://github.com/Lyall/OctopathFix](https://github.com/Lyall/OctopathFix)
 - Octopath2Fix by Lyall: [https://github.com/Lyall/Octopath2Fix](https://github.com/Lyall/Octopath2Fix)
+- SoulHackers2Fix by Lyall: [https://codeberg.org/Lyall/SoulHackers2Fix](https://codeberg.org/Lyall/SoulHackers2Fix)

@@ -10,7 +10,7 @@ import subprocess
 import traceback
 import zipfile
 from datetime import datetime, timezone
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 import decky  # type: ignore
@@ -355,7 +355,7 @@ class Plugin:
                     "--silent",
                     "--show-error",
                     "-A",
-                    "decky-16x10-fixes/0.1.11",
+                    "decky-16x10-fixes/0.1.12",
                     *extra_args,
                     "-o",
                     str(temp_destination),
@@ -405,6 +405,92 @@ class Plugin:
                 )
 
         shutil.move(str(temp_destination), str(destination))
+
+    def _normalise_archive_path(self, relative_path: str) -> str:
+        normalized = relative_path.replace("\\", "/").lstrip("/")
+        parts = PurePosixPath(normalized).parts
+        if not parts or any(part in ("", ".", "..") for part in parts):
+            raise RuntimeError(f"The release archive contains an unsafe path: {relative_path}")
+        return "/".join(parts)
+
+    def _get_archive_destination(self, install_path: Path, relative_path: str) -> Path:
+        normalized = self._normalise_archive_path(relative_path)
+        destination = (install_path / Path(*PurePosixPath(normalized).parts)).resolve()
+        install_root = install_path.resolve()
+        if destination != install_root and install_root not in destination.parents:
+            raise RuntimeError(f"The release archive contains an unsafe path: {relative_path}")
+        return destination
+
+    def _backup_file(self, source_path: Path, backup_dir: Path, relative_path: str) -> None:
+        backup_target = backup_dir / self._normalise_archive_path(relative_path)
+        backup_target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source_path, backup_target)
+
+    def _extract_archive_member(
+        self,
+        archive: zipfile.ZipFile,
+        member_name: str,
+        install_path: Path,
+        backup_dir: Path,
+    ) -> str:
+        relative_path = self._normalise_archive_path(member_name)
+        destination = self._get_archive_destination(install_path, relative_path)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+
+        if destination.exists():
+            self._backup_file(destination, backup_dir, relative_path)
+
+        try:
+            with archive.open(member_name, "r") as source_handle, destination.open("wb") as dest_handle:
+                shutil.copyfileobj(source_handle, dest_handle)
+        except PermissionError as error:
+            raise RuntimeError(
+                "The plugin was not able to write into the game folder. "
+                "Please make sure the game is fully closed and try again."
+            ) from error
+
+        return relative_path
+
+    def _extract_archive_files(
+        self,
+        archive: zipfile.ZipFile,
+        install_path: Path,
+        backup_dir: Path,
+        catalog_entry: dict[str, Any],
+    ) -> list[str]:
+        install_config = catalog_entry.get("install", {})
+        strategy = install_config.get("strategy", "extract_archive")
+        installed_files: list[str] = []
+
+        if strategy == "extract_archive":
+            archive_members = set(archive.namelist())
+            for relative_path in catalog_entry.get("managed_files", []):
+                if relative_path not in archive_members:
+                    raise RuntimeError(f"The release archive is missing {relative_path}.")
+                installed_files.append(
+                    self._extract_archive_member(archive, relative_path, install_path, backup_dir)
+                )
+            return installed_files
+
+        if strategy == "extract_all":
+            excluded_members = {
+                self._normalise_archive_path(member)
+                for member in install_config.get("exclude_members", [])
+            }
+            for member in archive.infolist():
+                if member.is_dir():
+                    continue
+
+                relative_path = self._normalise_archive_path(member.filename)
+                if relative_path in excluded_members:
+                    continue
+
+                installed_files.append(
+                    self._extract_archive_member(archive, member.filename, install_path, backup_dir)
+                )
+            return installed_files
+
+        raise RuntimeError(f'Unsupported install strategy: {strategy}')
 
     def _serialise_ini_value(self, value: Any) -> str:
         if isinstance(value, bool):
@@ -509,35 +595,31 @@ class Plugin:
         backup_dir.mkdir(parents=True, exist_ok=True)
 
         with zipfile.ZipFile(cache_path, "r") as archive:
-            archive_members = set(archive.namelist())
-            for relative_path in catalog_entry.get("managed_files", []):
-                if relative_path not in archive_members:
-                    raise RuntimeError(f"The release archive is missing {relative_path}.")
+            installed_files = self._extract_archive_files(archive, install_path, backup_dir, catalog_entry)
 
-                destination = install_path / relative_path
-                destination.parent.mkdir(parents=True, exist_ok=True)
-
-                if destination.exists():
-                    backup_target = backup_dir / relative_path
-                    backup_target.parent.mkdir(parents=True, exist_ok=True)
-                    shutil.copy2(destination, backup_target)
-
-                try:
-                    with archive.open(relative_path, "r") as source_handle, destination.open("wb") as dest_handle:
-                        shutil.copyfileobj(source_handle, dest_handle)
-                except PermissionError as error:
+        config = catalog_entry.get("config")
+        if config:
+            ini_relative_path = config["path"]
+            normalized_ini_path = self._normalise_archive_path(ini_relative_path)
+            ini_path = self._get_archive_destination(install_path, ini_relative_path)
+            if not ini_path.exists():
+                if config.get("create_if_missing"):
+                    ini_path.parent.mkdir(parents=True, exist_ok=True)
+                    ini_path.write_text(config.get("initial_content", ""), encoding="utf-8")
+                    installed_files.append(normalized_ini_path)
+                else:
                     raise RuntimeError(
-                        "The plugin was not able to write into the game folder. "
-                        "Please make sure the game is fully closed and try again."
-                    ) from error
+                        f"The {Path(ini_relative_path).name} file was not found after extraction, "
+                        "so the plugin could not finish setup."
+                    )
+            elif normalized_ini_path not in installed_files:
+                self._backup_file(ini_path, backup_dir, ini_relative_path)
 
-        ini_relative_path = catalog_entry["config"]["path"]
-        ini_path = install_path / ini_relative_path
-        if not ini_path.exists():
-            raise RuntimeError(
-                "The FF7RemakeFix.ini file was not found after extraction, so the plugin could not finish setup."
-            )
-        self._apply_ini_updates(ini_path, profile["config_updates"])
+            self._apply_ini_updates(ini_path, profile["config_updates"])
+            if config.get("create_if_missing") and normalized_ini_path not in installed_files:
+                installed_files.append(normalized_ini_path)
+
+        managed_files = list(dict.fromkeys(installed_files))
 
         install_record = {
             "appid": appid,
@@ -547,7 +629,7 @@ class Plugin:
             "installed_at": utc_now_iso(),
             "install_path": str(install_path),
             "backup_dir": str(backup_dir),
-            "managed_files": catalog_entry.get("managed_files", []),
+            "managed_files": managed_files,
             "source_name": source["name"],
             "source_version": source["version"],
             "source_url": source["source_url"],
@@ -562,9 +644,19 @@ class Plugin:
             "launch_option": catalog_entry["launch_options"]["required"],
             "launch_option_token": catalog_entry["launch_options"]["token"],
             "backup_dir": str(backup_dir),
-            "managed_files": catalog_entry.get("managed_files", []),
+            "managed_files": managed_files,
             "message": f'Installed {source["name"]} with the "{profile["label"]}" profile.',
         }
+
+    def _remove_empty_parent_dirs(self, start_path: Path, stop_path: Path) -> None:
+        current_path = start_path.resolve()
+        stop_resolved = stop_path.resolve()
+        while current_path != stop_resolved and stop_resolved in current_path.parents:
+            try:
+                current_path.rmdir()
+            except OSError:
+                break
+            current_path = current_path.parent
 
     def _uninstall_fix_sync(self, appid: int) -> dict[str, Any]:
         metadata = self._load_install_record(appid)
@@ -580,10 +672,11 @@ class Plugin:
 
         removed_files: list[str] = []
         for relative_path in metadata.get("managed_files", []):
-            target_path = install_path / relative_path
+            target_path = self._get_archive_destination(install_path, relative_path)
             if target_path.exists():
                 target_path.unlink()
                 removed_files.append(relative_path)
+                self._remove_empty_parent_dirs(target_path.parent, install_path)
 
         if backup_dir.exists():
             for backup_file in backup_dir.rglob("*"):
