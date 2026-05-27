@@ -764,6 +764,7 @@ function Content() {
   const catalogTitles = useMemo(
     () =>
       scan?.supported_games.map((game) => game.display_title) ?? [
+        "Dragon Quest VII Reimagined",
         "FF7 Remake Intergrade",
         "Octopath Traveler",
         "Octopath Traveler II",

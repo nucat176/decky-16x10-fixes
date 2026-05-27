@@ -21,6 +21,7 @@ This release is intentionally curated and cautious.
 
 Right now it supports:
 
+- `Dragon Quest VII Reimagined`
 - `Final Fantasy VII Remake Intergrade`
 - `Final Fantasy XVI`
 - `Octopath Traveler`
@@ -42,6 +43,9 @@ When you install a supported game from the plugin, it will:
 Current launch options by game:
 
 ```text
+Dragon Quest VII Reimagined
+WINEDLLOVERRIDES="dsound=n,b" %command%
+
 Final Fantasy VII Remake Intergrade
 WINEDLLOVERRIDES="dsound=n,b" %command%
 
@@ -65,6 +69,7 @@ This is not a universal "force any game to 16:10" tool yet.
 Please keep these expectations in mind:
 
 - Some games only fix gameplay and still have odd cutscenes or overlays.
+- Dragon Quest VII Reimagined can disable in-engine cutscene letterboxing, but this plugin does not mark pre-rendered movie playback as fixed.
 - FF7 is much better with the fix installed, but some transitions can still look wrong.
 - FF16 is demanding, so higher internal resolutions can cost a lot of performance on handhelds.
 - The two Octopath fixes keep the HUD centered to 16:9 by design.
@@ -203,6 +208,12 @@ Then restart Decky Loader or reboot the Steam Deck.
 
 ## Files The Plugin Currently Manages
 
+For `Dragon Quest VII Reimagined`:
+
+- `DQ7R/Binaries/Win64/dsound.dll`
+- `DQ7R/Binaries/Win64/DQ7RFix.asi`
+- `DQ7R/Binaries/Win64/DQ7RFix.ini`
+
 For `Final Fantasy VII Remake Intergrade`:
 
 - `End/Binaries/Win64/dsound.dll`
@@ -242,7 +253,7 @@ For `Soul Hackers 2`:
 This first version is intentionally narrow:
 
 - one curated catalog file
-- five supported titles
+- six supported titles
 - scan, install, reinstall, and uninstall support
 - beginner-friendly workflow in Game Mode
 
@@ -253,6 +264,7 @@ The product only gets more useful if users can trust that "supported" really mea
 ## Credits
 
 - Decky Loader: [https://github.com/SteamDeckHomebrew/decky-loader](https://github.com/SteamDeckHomebrew/decky-loader)
+- DQ7RFix by Lyall: [https://codeberg.org/Lyall/DQ7RFix](https://codeberg.org/Lyall/DQ7RFix)
 - FF7RemakeFix by Lyall: [https://github.com/Lyall/FF7RemakeFix](https://github.com/Lyall/FF7RemakeFix)
 - FFXVIFix by Lyall: [https://codeberg.org/Lyall/FFXVIFix](https://codeberg.org/Lyall/FFXVIFix)
 - OctopathFix by Lyall: [https://github.com/Lyall/OctopathFix](https://github.com/Lyall/OctopathFix)

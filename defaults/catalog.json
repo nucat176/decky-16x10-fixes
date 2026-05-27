@@ -279,6 +279,86 @@
       ]
     },
     {
+      "appid": 2499860,
+      "slug": "dragon-quest-vii-reimagined",
+      "title": "DRAGON QUEST VII Reimagined",
+      "display_title": "Dragon Quest VII Reimagined",
+      "source": {
+        "name": "DQ7RFix",
+        "repo": "Lyall/DQ7RFix",
+        "version": "0.0.5",
+        "source_url": "https://codeberg.org/Lyall/DQ7RFix/releases/tag/0.0.5",
+        "download_url": "https://codeberg.org/Lyall/DQ7RFix/releases/download/0.0.5/DQ7RFix_0.0.5.zip",
+        "asset_name": "DQ7RFix_0.0.5.zip",
+        "sha256": "1e3c5482a578a08913839c54f5db682783502acef6f7e45482ecafb4c3085daf"
+      },
+      "auto_profile_id": "current-display",
+      "install": {
+        "strategy": "extract_archive",
+        "destination_dir": "DQ7R/Binaries/Win64"
+      },
+      "managed_files": [
+        "DQ7R/Binaries/Win64/dsound.dll",
+        "DQ7R/Binaries/Win64/DQ7RFix.asi",
+        "DQ7R/Binaries/Win64/DQ7RFix.ini"
+      ],
+      "config": {
+        "type": "ini",
+        "path": "DQ7R/Binaries/Win64/DQ7RFix.ini"
+      },
+      "launch_options": {
+        "required": "WINEDLLOVERRIDES=\"dsound=n,b\" %command%",
+        "token": "dsound=n,b"
+      },
+      "supports": {
+        "gameplay_aspect_fix": true,
+        "hud_fix": true,
+        "movie_fix": false,
+        "custom_resolution": true
+      },
+      "install_notes": [
+        "The plugin downloads DQ7RFix from its public release page and installs it into the game's shipping executable folder.",
+        "The plugin patches DQ7RFix.ini with the automatic display profile.",
+        "DQ7RFix can disable in-engine cutscene letterboxing, but pre-rendered movie playback may still behave like the base game.",
+        "Steam Deck/Linux still needs the dsound Wine override. The plugin will try to add it to launch options for you."
+      ],
+      "known_issues": [
+        "The automatic profile spans field and battle HUD elements to the screen edges. Reinstalling after manual DQ7RFix.ini edits will reapply that curated preset.",
+        "Pre-rendered movie playback is not marked as fixed by this plugin."
+      ],
+      "profiles": [
+        {
+          "id": "current-display",
+          "label": "Use Current Display",
+          "description": "Uses the current display resolution, enables the aspect-ratio and HUD fixes, and removes in-engine cutscene letterboxing.",
+          "resolution": "Auto",
+          "config_updates": {
+            "Custom Resolution": {
+              "Enabled": true,
+              "Width": 0,
+              "Height": 0
+            },
+            "Disable Cutscene Letterboxing": {
+              "Enabled": true
+            },
+            "Fix Aspect Ratio": {
+              "Enabled": true
+            },
+            "Fix HUD": {
+              "Enabled": true,
+              "Span": true
+            },
+            "Apply CVars": {
+              "Enabled": false
+            },
+            "Load Loose Files": {
+              "Enabled": false
+            }
+          }
+        }
+      ]
+    },
+    {
       "appid": 2515020,
       "slug": "ff16",
       "title": "FINAL FANTASY XVI",

@@ -355,7 +355,7 @@ class Plugin:
                     "--silent",
                     "--show-error",
                     "-A",
-                    "decky-16x10-fixes/0.1.12",
+                    "decky-16x10-fixes/0.1.13",
                     *extra_args,
                     "-o",
                     str(temp_destination),
@@ -432,8 +432,9 @@ class Plugin:
         member_name: str,
         install_path: Path,
         backup_dir: Path,
+        destination_relative_path: str | None = None,
     ) -> str:
-        relative_path = self._normalise_archive_path(member_name)
+        relative_path = self._normalise_archive_path(destination_relative_path or member_name)
         destination = self._get_archive_destination(install_path, relative_path)
         destination.parent.mkdir(parents=True, exist_ok=True)
 
@@ -451,6 +452,20 @@ class Plugin:
 
         return relative_path
 
+    def _get_archive_member_for_destination(self, relative_path: str, destination_dir: str | None) -> str:
+        normalized_path = self._normalise_archive_path(relative_path)
+        if not destination_dir:
+            return normalized_path
+
+        normalized_destination_dir = self._normalise_archive_path(destination_dir)
+        prefix = f"{normalized_destination_dir}/"
+        if not normalized_path.startswith(prefix):
+            raise RuntimeError(
+                f"The managed file {relative_path} is outside the configured archive destination directory."
+            )
+
+        return normalized_path[len(prefix):]
+
     def _extract_archive_files(
         self,
         archive: zipfile.ZipFile,
@@ -460,15 +475,17 @@ class Plugin:
     ) -> list[str]:
         install_config = catalog_entry.get("install", {})
         strategy = install_config.get("strategy", "extract_archive")
+        destination_dir = install_config.get("destination_dir")
         installed_files: list[str] = []
 
         if strategy == "extract_archive":
             archive_members = set(archive.namelist())
             for relative_path in catalog_entry.get("managed_files", []):
-                if relative_path not in archive_members:
-                    raise RuntimeError(f"The release archive is missing {relative_path}.")
+                member_name = self._get_archive_member_for_destination(relative_path, destination_dir)
+                if member_name not in archive_members:
+                    raise RuntimeError(f"The release archive is missing {member_name}.")
                 installed_files.append(
-                    self._extract_archive_member(archive, relative_path, install_path, backup_dir)
+                    self._extract_archive_member(archive, member_name, install_path, backup_dir, relative_path)
                 )
             return installed_files
 
@@ -485,8 +502,18 @@ class Plugin:
                 if relative_path in excluded_members:
                     continue
 
+                destination_relative_path = (
+                    f"{self._normalise_archive_path(destination_dir)}/{relative_path}"
+                    if destination_dir else relative_path
+                )
                 installed_files.append(
-                    self._extract_archive_member(archive, member.filename, install_path, backup_dir)
+                    self._extract_archive_member(
+                        archive,
+                        member.filename,
+                        install_path,
+                        backup_dir,
+                        destination_relative_path,
+                    )
                 )
             return installed_files
 
