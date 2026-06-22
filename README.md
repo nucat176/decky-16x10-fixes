@@ -27,6 +27,7 @@ Right now it supports:
 - `Octopath Traveler`
 - `Octopath Traveler II`
 - `Soul Hackers 2`
+- `Yakuza: Like a Dragon`
 
 The long-term goal is still a broader library scanner, but every supported title should have a real, tested install flow.
 
@@ -60,6 +61,9 @@ WINEDLLOVERRIDES="dinput8=n,b" %command%
 
 Soul Hackers 2
 WINEDLLOVERRIDES="winhttp=n,b" %command%
+
+Yakuza: Like a Dragon
+WINEDLLOVERRIDES="dinput8=n,b" %command%
 ```
 
 ## Important Caveats
@@ -74,6 +78,7 @@ Please keep these expectations in mind:
 - FF16 is demanding, so higher internal resolutions can cost a lot of performance on handhelds.
 - The two Octopath fixes keep the HUD centered to 16:9 by design.
 - Soul Hackers 2 uses BepInEx, so its first launch after install can take longer than the ASI-based fixes.
+- Yakuza: Like a Dragon support uses DragonTweak to remove cutscene/dialog pillarboxing and letterboxing, but this plugin does not mark HUD or movie playback as fixed.
 - This plugin only manages games that are explicitly in its curated catalog.
 - The first release is meant for single-player use cases like FF7, not competitive anti-cheat games.
 
@@ -248,12 +253,18 @@ For `Soul Hackers 2`:
 - `dotnet/`
 - `BepInEx/config/SoulHackers2Fix.cfg`
 
+For `Yakuza: Like a Dragon`:
+
+- `runtime/media/dinput8.dll`
+- `runtime/media/DragonTweak.asi`
+- `runtime/media/DragonTweak.ini`
+
 ## Current Scope
 
 This first version is intentionally narrow:
 
 - one curated catalog file
-- six supported titles
+- seven supported titles
 - scan, install, reinstall, and uninstall support
 - beginner-friendly workflow in Game Mode
 
@@ -264,6 +275,7 @@ The product only gets more useful if users can trust that "supported" really mea
 ## Credits
 
 - Decky Loader: [https://github.com/SteamDeckHomebrew/decky-loader](https://github.com/SteamDeckHomebrew/decky-loader)
+- DragonTweak by Lyall: [https://codeberg.org/Lyall/DragonTweak](https://codeberg.org/Lyall/DragonTweak)
 - DQ7RFix by Lyall: [https://codeberg.org/Lyall/DQ7RFix](https://codeberg.org/Lyall/DQ7RFix)
 - FF7RemakeFix by Lyall: [https://github.com/Lyall/FF7RemakeFix](https://github.com/Lyall/FF7RemakeFix)
 - FFXVIFix by Lyall: [https://codeberg.org/Lyall/FFXVIFix](https://codeberg.org/Lyall/FFXVIFix)

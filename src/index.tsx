@@ -770,6 +770,7 @@ function Content() {
         "Octopath Traveler II",
         "Final Fantasy XVI",
         "Soul Hackers 2",
+        "Yakuza: Like a Dragon",
       ],
     [scan],
   );

@@ -542,6 +542,79 @@
           }
         }
       ]
+    },
+    {
+      "appid": 1235140,
+      "slug": "yakuza-like-a-dragon",
+      "title": "Yakuza: Like a Dragon",
+      "display_title": "Yakuza: Like a Dragon",
+      "source": {
+        "name": "DragonTweak",
+        "repo": "Lyall/DragonTweak",
+        "version": "0.0.6",
+        "source_url": "https://codeberg.org/Lyall/DragonTweak/releases/tag/0.0.6",
+        "download_url": "https://codeberg.org/Lyall/DragonTweak/releases/download/0.0.6/DragonTweak_0.0.6.zip",
+        "asset_name": "DragonTweak_0.0.6.zip",
+        "sha256": "97a23c3f506f2748b27508412142d1341a56308c9b8882c18f97ffac2e485047"
+      },
+      "auto_profile_id": "current-display",
+      "install": {
+        "strategy": "extract_archive",
+        "destination_dir": "runtime/media"
+      },
+      "managed_files": [
+        "runtime/media/dinput8.dll",
+        "runtime/media/DragonTweak.asi",
+        "runtime/media/DragonTweak.ini"
+      ],
+      "config": {
+        "type": "ini",
+        "path": "runtime/media/DragonTweak.ini"
+      },
+      "launch_options": {
+        "required": "WINEDLLOVERRIDES=\"dinput8=n,b\" %command%",
+        "token": "dinput8=n,b"
+      },
+      "supports": {
+        "gameplay_aspect_fix": true,
+        "hud_fix": false,
+        "movie_fix": false,
+        "custom_resolution": false
+      },
+      "install_notes": [
+        "The plugin downloads DragonTweak from its public release page and installs it into the runtime/media executable folder.",
+        "The plugin patches DragonTweak.ini to remove pillarboxing and letterboxing in cutscenes and dialog.",
+        "The curated profile leaves DragonTweak's all-scenes override disabled to avoid changing scenes that the base game already renders correctly.",
+        "Steam Deck/Linux still needs the dinput8 Wine override. The plugin will try to add it to launch options for you."
+      ],
+      "known_issues": [
+        "DragonTweak does not advertise a HUD fix or movie fix for this title, so this plugin only marks gameplay aspect support.",
+        "Reinstalling after manual DragonTweak.ini edits will reapply the curated preset."
+      ],
+      "profiles": [
+        {
+          "id": "current-display",
+          "label": "Use Current Display",
+          "description": "Uses the current display and removes pillarboxing and letterboxing in cutscenes and dialog.",
+          "resolution": "Auto",
+          "config_updates": {
+            "Intro Skip": {
+              "Enabled": false
+            },
+            "Disable Pillarboxing": {
+              "Enabled": true,
+              "AllScenes": false
+            },
+            "Shadow Quality": {
+              "Resolution": 2048,
+              "DrawDistance": false
+            },
+            "Adjust LOD": {
+              "Enabled": false
+            }
+          }
+        }
+      ]
     }
   ]
 }
