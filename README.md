@@ -24,8 +24,10 @@ Right now it supports:
 - `Dragon Quest VII Reimagined`
 - `Final Fantasy VII Remake Intergrade`
 - `Final Fantasy XVI`
+- `Monster Hunter Stories 3: Twisted Reflection`
 - `Octopath Traveler`
 - `Octopath Traveler II`
+- `Persona 3 Reload`
 - `Soul Hackers 2`
 - `Yakuza: Like a Dragon`
 
@@ -38,7 +40,7 @@ When you install a supported game from the plugin, it will:
 1. Find the game install folder in your Steam library.
 2. Download the matching fix from its public release page.
 3. Copy the fix files into the game folder.
-4. Patch the `.ini` with a safe preset.
+4. Patch the fix configuration with a safe preset.
 5. Try to add the required Proton launch option automatically.
 
 Current launch options by game:
@@ -50,6 +52,9 @@ WINEDLLOVERRIDES="dsound=n,b" %command%
 Final Fantasy VII Remake Intergrade
 WINEDLLOVERRIDES="dsound=n,b" %command%
 
+Monster Hunter Stories 3: Twisted Reflection
+WINEDLLOVERRIDES="dinput8.dll=n,b" %command%
+
 Octopath Traveler
 WINEDLLOVERRIDES="d3d11.dll=n,b" %command%
 
@@ -58,6 +63,9 @@ WINEDLLOVERRIDES="dsound=n,b" %command%
 
 Final Fantasy XVI
 WINEDLLOVERRIDES="dinput8=n,b" %command%
+
+Persona 3 Reload
+WINEDLLOVERRIDES="dsound=n,b" %command%
 
 Soul Hackers 2
 WINEDLLOVERRIDES="winhttp=n,b" %command%
@@ -76,7 +84,9 @@ Please keep these expectations in mind:
 - Dragon Quest VII Reimagined can disable in-engine cutscene letterboxing, but this plugin does not mark pre-rendered movie playback as fixed.
 - FF7 is much better with the fix installed, but some transitions can still look wrong.
 - FF16 is demanding, so higher internal resolutions can cost a lot of performance on handhelds.
+- Monster Hunter Stories 3 support uses REFramework's base aspect-ratio fix and does not install separate UI Lua mods.
 - The two Octopath fixes keep the HUD centered to 16:9 by design.
+- Persona 3 Reload can still have screen fades and transitions that do not span the full screen.
 - Soul Hackers 2 uses BepInEx, so its first launch after install can take longer than the ASI-based fixes.
 - Yakuza: Like a Dragon support uses DragonTweak to remove cutscene/dialog pillarboxing and letterboxing, but this plugin does not mark HUD or movie playback as fixed.
 - This plugin only manages games that are explicitly in its curated catalog.
@@ -245,6 +255,11 @@ For `Final Fantasy XVI`:
 - `FFXVIFix.asi`
 - `FFXVIFix.ini`
 
+For `Monster Hunter Stories 3: Twisted Reflection`:
+
+- `dinput8.dll`
+- `re2_fw_config.txt`
+
 For `Soul Hackers 2`:
 
 - `winhttp.dll`
@@ -252,6 +267,12 @@ For `Soul Hackers 2`:
 - `BepInEx/`
 - `dotnet/`
 - `BepInEx/config/SoulHackers2Fix.cfg`
+
+For `Persona 3 Reload`:
+
+- `P3R/Binaries/Win64/dsound.dll`
+- `P3R/Binaries/Win64/P3RFix.asi`
+- `P3R/Binaries/Win64/P3RFix.ini`
 
 For `Yakuza: Like a Dragon`:
 
@@ -264,7 +285,7 @@ For `Yakuza: Like a Dragon`:
 This first version is intentionally narrow:
 
 - one curated catalog file
-- seven supported titles
+- nine supported titles
 - scan, install, reinstall, and uninstall support
 - beginner-friendly workflow in Game Mode
 
@@ -281,4 +302,6 @@ The product only gets more useful if users can trust that "supported" really mea
 - FFXVIFix by Lyall: [https://codeberg.org/Lyall/FFXVIFix](https://codeberg.org/Lyall/FFXVIFix)
 - OctopathFix by Lyall: [https://github.com/Lyall/OctopathFix](https://github.com/Lyall/OctopathFix)
 - Octopath2Fix by Lyall: [https://github.com/Lyall/Octopath2Fix](https://github.com/Lyall/Octopath2Fix)
+- P3RFix by Lyall: [https://codeberg.org/Lyall/P3RFix](https://codeberg.org/Lyall/P3RFix)
+- REFramework by praydog: [https://github.com/praydog/REFramework](https://github.com/praydog/REFramework)
 - SoulHackers2Fix by Lyall: [https://codeberg.org/Lyall/SoulHackers2Fix](https://codeberg.org/Lyall/SoulHackers2Fix)

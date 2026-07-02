@@ -355,7 +355,7 @@ class Plugin:
                     "--silent",
                     "--show-error",
                     "-A",
-                    "decky-16x10-fixes/0.1.14",
+                    "decky-16x10-fixes/0.1.15",
                     *extra_args,
                     "-o",
                     str(temp_destination),
@@ -571,6 +571,45 @@ class Plugin:
         with ini_path.open("w", encoding="utf-8") as handle:
             handle.writelines(output_lines)
 
+    def _apply_key_value_updates(self, config_path: Path, updates: dict[str, Any]) -> None:
+        with config_path.open("r", encoding="utf-8", errors="ignore") as handle:
+            lines = handle.readlines()
+
+        seen_keys: set[str] = set()
+        output_lines: list[str] = []
+        for line in lines:
+            key_match = re.match(r"(\s*([^#;=\s][^=]*?)\s*=\s*)(.*)$", line)
+            if not key_match:
+                output_lines.append(line)
+                continue
+
+            key = key_match.group(2).strip()
+            if key in updates:
+                output_lines.append(f"{key_match.group(1)}{self._serialise_ini_value(updates[key])}\n")
+                seen_keys.add(key)
+            else:
+                output_lines.append(line)
+
+        missing_keys = [key for key in updates if key not in seen_keys]
+        if missing_keys and output_lines and not output_lines[-1].endswith("\n"):
+            output_lines[-1] += "\n"
+        for key in missing_keys:
+            output_lines.append(f"{key}={self._serialise_ini_value(updates[key])}\n")
+
+        with config_path.open("w", encoding="utf-8") as handle:
+            handle.writelines(output_lines)
+
+    def _apply_config_updates(self, config_path: Path, config_type: str, updates: dict[str, Any]) -> None:
+        if config_type == "key_value":
+            self._apply_key_value_updates(config_path, updates)
+            return
+
+        if config_type == "ini":
+            self._apply_ini_updates(config_path, updates)
+            return
+
+        raise RuntimeError(f'Unsupported config type: {config_type}')
+
     def _get_auto_profile(self, catalog_entry: dict[str, Any]) -> dict[str, Any]:
         profiles = catalog_entry.get("profiles", [])
         auto_profile_id = catalog_entry.get("auto_profile_id")
@@ -642,7 +681,7 @@ class Plugin:
             elif normalized_ini_path not in installed_files:
                 self._backup_file(ini_path, backup_dir, ini_relative_path)
 
-            self._apply_ini_updates(ini_path, profile["config_updates"])
+            self._apply_config_updates(ini_path, config.get("type", "ini"), profile["config_updates"])
             if config.get("create_if_missing") and normalized_ini_path not in installed_files:
                 installed_files.append(normalized_ini_path)
 
