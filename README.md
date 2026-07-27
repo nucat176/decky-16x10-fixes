@@ -144,9 +144,10 @@ Once the plugin is installed:
 2. Open the `16:10 Fixes` plugin from Decky.
 3. Press `Rescan`.
 4. Select the game you want to fix.
-5. Press `Install Automatically`.
-6. Wait for the install to finish.
-7. Launch the game normally from Steam.
+5. Press `Install Fix` to use the current display resolution.
+6. If the game offers fixed resolution profiles, choose one instead when you want that exact render size.
+7. Wait for the install to finish.
+8. Launch the game normally from Steam.
 
 That is it.
 
@@ -254,6 +255,10 @@ For `Final Fantasy XVI`:
 - `dinput8.dll`
 - `FFXVIFix.asi`
 - `FFXVIFix.ini`
+
+Final Fantasy XVI also offers fixed `1280x800` and `1440x900` profiles. These profiles add the
+chosen size to the game's windowed resolution list; select that resolution in the game's display
+settings after installing the profile.
 
 For `Monster Hunter Stories 3: Twisted Reflection`:
 

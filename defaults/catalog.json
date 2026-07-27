@@ -459,6 +459,114 @@
               "Enabled": true
             }
           }
+        },
+        {
+          "id": "steam-deck-1280x800",
+          "label": "Steam Deck 1280x800",
+          "description": "Adds 1280x800 to Final Fantasy XVI's windowed resolution list. Select 1280x800 in the game's display settings after installing.",
+          "resolution": "1280x800",
+          "config_updates": {
+            "Fix Resolution": {
+              "Enabled": true,
+              "WindowedResX": 1280,
+              "WindowedResY": 800
+            },
+            "Fix HUD": {
+              "Enabled": true,
+              "HUDSize": 2
+            },
+            "Fix Movies": {
+              "Enabled": true,
+              "Alternative": false
+            },
+            "Fix FOV": {
+              "Enabled": true
+            },
+            "Gameplay Camera": {
+              "AdditionalFOV": 0,
+              "AdditionalFOVLockOn": 0,
+              "HorizontalPos": 0.95,
+              "VerticalPos": -0.65,
+              "DistanceMultiplier": 1
+            },
+            "Gameplay Tweaks": {
+              "AdjustStaggerTimers": false,
+              "AdjustDamageOutput": false
+            },
+            "Game Window": {
+              "BackgroundAudio": false,
+              "Resizable": false,
+              "DisableScreensaver": true
+            },
+            "Dynamic Resolution": {
+              "MaxResolution": 100,
+              "MinResolution": 50
+            },
+            "Remove 30FPS Cap": {
+              "Enabled": true,
+              "Framerate": 29.97
+            },
+            "Cutscene Frame Generation": {
+              "Enabled": true
+            },
+            "Disable Graphics Debugger Check": {
+              "Enabled": true
+            }
+          }
+        },
+        {
+          "id": "1440x900",
+          "label": "1440x900",
+          "description": "Adds 1440x900 to Final Fantasy XVI's windowed resolution list. Select 1440x900 in the game's display settings after installing.",
+          "resolution": "1440x900",
+          "config_updates": {
+            "Fix Resolution": {
+              "Enabled": true,
+              "WindowedResX": 1440,
+              "WindowedResY": 900
+            },
+            "Fix HUD": {
+              "Enabled": true,
+              "HUDSize": 2
+            },
+            "Fix Movies": {
+              "Enabled": true,
+              "Alternative": false
+            },
+            "Fix FOV": {
+              "Enabled": true
+            },
+            "Gameplay Camera": {
+              "AdditionalFOV": 0,
+              "AdditionalFOVLockOn": 0,
+              "HorizontalPos": 0.95,
+              "VerticalPos": -0.65,
+              "DistanceMultiplier": 1
+            },
+            "Gameplay Tweaks": {
+              "AdjustStaggerTimers": false,
+              "AdjustDamageOutput": false
+            },
+            "Game Window": {
+              "BackgroundAudio": false,
+              "Resizable": false,
+              "DisableScreensaver": true
+            },
+            "Dynamic Resolution": {
+              "MaxResolution": 100,
+              "MinResolution": 50
+            },
+            "Remove 30FPS Cap": {
+              "Enabled": true,
+              "Framerate": 29.97
+            },
+            "Cutscene Frame Generation": {
+              "Enabled": true
+            },
+            "Disable Graphics Debugger Check": {
+              "Enabled": true
+            }
+          }
         }
       ]
     },

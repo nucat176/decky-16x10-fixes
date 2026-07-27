@@ -84,6 +84,7 @@ type AppDetailsResponse = {
 
 const scanLibrary = callable<[], ScanResult>("scan_library");
 const installAutoFix = callable<[appid: number], InstallResult>("install_auto_fix");
+const installFix = callable<[appid: number, profileId: string], InstallResult>("install_fix");
 const uninstallFix = callable<[appid: number], UninstallResult>("uninstall_fix");
 const getLastDebugReport = callable<[], DebugReport | null>("get_last_debug_report");
 
@@ -352,16 +353,22 @@ function GameSection(props: {
   busy: boolean;
   debugMode: boolean;
   lastDebugReport: DebugReport | null;
-  onInstall: () => Promise<void>;
+  onInstall: (profileId?: string) => Promise<void>;
   onUninstall: () => Promise<void>;
   onToggleDebug: () => void;
 }) {
   const { game, busy, debugMode, lastDebugReport, onInstall, onUninstall, onToggleDebug } = props;
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const fixedResolutionProfiles = game.profiles.filter(
+    (profile) => /^\d+x\d+$/i.test(profile.resolution),
+  );
+  const activeProfileIsFixed = fixedResolutionProfiles.some(
+    (profile) => profile.id === game.active_profile_id,
+  );
 
   const consolidatedNotes = useMemo(() => {
     const baseNotes = [
-      "Install uses your current display automatically — no need to pick a resolution.",
+      "Install Fix uses your current display automatically.",
       ...game.install_notes,
     ];
     const knownIssues = game.known_issues.map((issue) => `Heads up: ${issue}`);
@@ -392,9 +399,45 @@ function GameSection(props: {
           onClick={() => void onInstall()}
           disabled={busy}
         >
-          {getInstallButtonLabel(game.status, busy)}
+          {activeProfileIsFixed && !busy
+            ? "Use Current Display"
+            : getInstallButtonLabel(game.status, busy)}
         </ButtonItem>
       </PanelSectionRow>
+
+      {fixedResolutionProfiles.length > 0 ? (
+        <PanelSectionRow>
+          <div
+            style={{
+              width: "100%",
+              display: "flex",
+              flexDirection: "column",
+              gap: tokens.gap.sm,
+            }}
+          >
+            <SectionLabel>Fixed resolution profiles</SectionLabel>
+            <div style={{ fontSize: tokens.font.sm, opacity: 0.8, lineHeight: 1.4 }}>
+              Use one of these when you want a specific 16:10 resolution instead of the current
+              display size.
+            </div>
+            {fixedResolutionProfiles.map((profile) => (
+              <ButtonItem
+                key={profile.id}
+                layout="below"
+                description={profile.description}
+                onClick={() => void onInstall(profile.id)}
+                disabled={busy}
+              >
+                {busy
+                  ? "Working…"
+                  : game.active_profile_id === profile.id
+                    ? `Reinstall ${profile.resolution}`
+                    : `Use ${profile.resolution}`}
+              </ButtonItem>
+            ))}
+          </div>
+        </PanelSectionRow>
+      ) : null}
 
       {game.status === "managed" || game.status === "repair" ? (
         <PanelSectionRow>
@@ -679,14 +722,16 @@ function Content() {
   const selectedGame =
     scan?.supported_games.find((game) => game.appid === selectedAppId) ?? null;
 
-  const handleInstall = async () => {
+  const handleInstall = async (profileId?: string) => {
     if (!selectedGame) {
       return;
     }
 
     setBusyAppId(selectedGame.appid);
     try {
-      const result = await installAutoFix(selectedGame.appid);
+      const result = profileId
+        ? await installFix(selectedGame.appid, profileId)
+        : await installAutoFix(selectedGame.appid);
       let launchOptionBody = "The fix files were installed.";
       try {
         const launchOptionResult = await ensureLaunchOption(
