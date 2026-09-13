@@ -1,10 +1,11 @@
 {
   "name": "decky-16x10-fixes",
-  "version": "0.1.16",
+  "version": "0.1.17",
   "description": "Decky Loader plugin that scans your Steam library and installs curated 16:10 fixes.",
   "type": "module",
   "scripts": {
     "build": "rollup -c",
+    "test": "python3 -m unittest discover -s tests -v",
     "watch": "rollup -c -w",
     "package": "pnpm build && ./scripts/package-plugin.sh"
   },

@@ -25,6 +25,7 @@ Right now it supports:
 - `Final Fantasy VII Remake Intergrade`
 - `Final Fantasy XVI`
 - `Monster Hunter Stories 3: Twisted Reflection`
+- `Onimusha: Way of the Sword`
 - `Octopath Traveler`
 - `Octopath Traveler II`
 - `Persona 3 Reload`
@@ -53,6 +54,9 @@ Final Fantasy VII Remake Intergrade
 WINEDLLOVERRIDES="dsound=n,b" %command%
 
 Monster Hunter Stories 3: Twisted Reflection
+WINEDLLOVERRIDES="dinput8.dll=n,b" %command%
+
+Onimusha: Way of the Sword
 WINEDLLOVERRIDES="dinput8.dll=n,b" %command%
 
 Octopath Traveler
@@ -85,6 +89,7 @@ Please keep these expectations in mind:
 - FF7 is much better with the fix installed, but some transitions can still look wrong.
 - FF16 is demanding, so higher internal resolutions can cost a lot of performance on handhelds.
 - Monster Hunter Stories 3 support uses REFramework's base aspect-ratio fix and does not install separate UI Lua mods.
+- Onimusha support pins a specific REFramework nightly; HUD, menu, prompt, and cutscene correction remain explicitly unverified.
 - The two Octopath fixes keep the HUD centered to 16:9 by design.
 - Persona 3 Reload can still have screen fades and transitions that do not span the full screen.
 - Soul Hackers 2 uses BepInEx, so its first launch after install can take longer than the ASI-based fixes.
@@ -265,6 +270,11 @@ For `Monster Hunter Stories 3: Twisted Reflection`:
 - `dinput8.dll`
 - `re2_fw_config.txt`
 
+For `Onimusha: Way of the Sword`:
+
+- `dinput8.dll`
+- `re2_fw_config.txt`
+
 For `Soul Hackers 2`:
 
 - `winhttp.dll`
@@ -290,7 +300,7 @@ For `Yakuza: Like a Dragon`:
 This first version is intentionally narrow:
 
 - one curated catalog file
-- nine supported titles
+- ten supported titles
 - scan, install, reinstall, and uninstall support
 - beginner-friendly workflow in Game Mode
 

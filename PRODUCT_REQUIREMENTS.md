@@ -281,6 +281,12 @@ not:
 
 `automatic force-16:10 for everything`
 
+## Current REFramework Integrations
+
+- Monster Hunter Stories 3 and Onimusha: Way of the Sword use pinned REFramework nightly archives.
+- Each integration installs only the non-VR proxy DLL, creates a deterministic local configuration, and requires the Proton DLL override.
+- REFramework support flags remain game-specific: installing the framework does not by itself prove HUD, menu, movie, or full-game compatibility.
+
 That gives us a product we can actually make reliable.
 
 ## References
