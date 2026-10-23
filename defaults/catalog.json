@@ -15,7 +15,7 @@
         "asset_name": "final-fantasy-resonance-fix_0.3.0.zip",
         "sha256": "44cbed92f87027b3a7f5ea4bfd2b31810042444c1cb5d21e8b0f1dd6ecde0e65"
       },
-      "auto_profile_id": "legion-go-2-1920x1200-test",
+      "auto_profile_id": "legion-go-2-horizontal-1920x1200-test",
       "install": {
         "strategy": "extract_archive",
         "destination_dir": "FFRS/Binaries/Win64"
@@ -42,21 +42,30 @@
       },
       "install_notes": [
         "Experimental Legion Go 2 test profile: select 1920x1200 in Steam/game display settings before playing. The mod uses the selected resolution; the plugin does not force a render size.",
-        "Installs the full-game v0.3.0 aspect-ratio fix with HUD constraining disabled.",
+        "Camera test: adjusts the full-game v0.3.0 mod to preserve horizontal field of view at 16:10, with HUD constraining disabled.",
         "Movies keep the upstream 16:9 correction enabled; pre-rendered videos may still have black bars.",
         "SteamOS/Proton needs the winmm Wine override. The plugin will try to add it to launch options for you."
       ],
       "known_issues": [
-        "Full-game gameplay, HUD and cutscenes at 1920x1200 on Legion Go 2/SteamOS still need on-device testing.",
+        "This camera test is intended to address the reduced horizontal view reported with v0.1.18. Correct proportions, gameplay, HUD and cutscenes at 1920x1200 still need on-device testing.",
         "Enabling HUD constraining can crash v0.3.0 during battle transitions. Reinstalling this profile reapplies HUD constraining off.",
         "HUD and movie fixes are not marked as verified for this test profile."
       ],
       "profiles": [
         {
-          "id": "legion-go-2-1920x1200-test",
-          "label": "Legion Go 2 1920x1200 (Test)",
-          "description": "Choose 1920x1200 in Steam/game display settings. Applies the aspect-ratio fix with HUD constraining disabled.",
+          "id": "legion-go-2-horizontal-1920x1200-test",
+          "label": "Legion Go 2 1920x1200 Camera Test",
+          "description": "Choose 1920x1200. Tests preserving horizontal view and revealing more vertically, with HUD constraining disabled.",
           "resolution": "In-game",
+          "binary_patches": [
+            {
+              "path": "FFRS/Binaries/Win64/scripts/final_fantasy_resonance_fix.asi",
+              "sha256_before": "92ef2966f99490487188cf6e498e6d1d625ca10521cfb0ed741b03d0d7954f2f",
+              "sha256_after": "1489e41cf1943830d4711801ca1d2d2e47fe5f4bbd8c39891dddb519b5c45e0c",
+              "find_ascii": "BA 00 00 00 00 90 90 90",
+              "replace_ascii": "BA 01 00 00 00 90 90 90"
+            }
+          ],
           "config_updates": {
             "": {
               "super_enable": true

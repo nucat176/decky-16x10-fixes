@@ -433,6 +433,7 @@ class Plugin:
         install_path: Path,
         backup_dir: Path,
         destination_relative_path: str | None = None,
+        contents: bytes | None = None,
     ) -> str:
         relative_path = self._normalise_archive_path(destination_relative_path or member_name)
         destination = self._get_archive_destination(install_path, relative_path)
@@ -443,7 +444,10 @@ class Plugin:
 
         try:
             with archive.open(member_name, "r") as source_handle, destination.open("wb") as dest_handle:
-                shutil.copyfileobj(source_handle, dest_handle)
+                if contents is None:
+                    shutil.copyfileobj(source_handle, dest_handle)
+                else:
+                    dest_handle.write(contents)
         except PermissionError as error:
             raise RuntimeError(
                 "The plugin was not able to write into the game folder. "
@@ -466,16 +470,47 @@ class Plugin:
 
         return normalized_path[len(prefix):]
 
+    def _prepare_archive_patches(
+        self,
+        archive: zipfile.ZipFile,
+        catalog_entry: dict[str, Any],
+        patches: list[dict[str, Any]],
+    ) -> dict[str, bytes]:
+        """Validate each pinned mod adjustment before changing any game files."""
+        prepared: dict[str, bytes] = {}
+        install = catalog_entry.get("install", {})
+        if patches and install.get("strategy", "extract_archive") != "extract_archive":
+            raise RuntimeError("Binary adjustments require a curated managed-file archive.")
+        for patch in patches:
+            relative_path = self._normalise_archive_path(patch["path"])
+            if relative_path not in catalog_entry.get("managed_files", []) or relative_path in prepared:
+                raise RuntimeError("A binary adjustment must target one unique managed file.")
+            member = self._get_archive_member_for_destination(relative_path, install.get("destination_dir"))
+            original = archive.read(member)
+            if hashlib.sha256(original).hexdigest() != patch["sha256_before"]:
+                raise RuntimeError(f"The {Path(relative_path).name} checksum did not match the expected mod binary.")
+            before = patch["find_ascii"].encode("ascii")
+            after = patch["replace_ascii"].encode("ascii")
+            if not before or len(before) != len(after) or original.count(before) != 1:
+                raise RuntimeError("The mod adjustment did not match one unique, same-size byte sequence.")
+            modified = original.replace(before, after, 1)
+            if hashlib.sha256(modified).hexdigest() != patch["sha256_after"]:
+                raise RuntimeError("The adjusted mod binary did not match its expected checksum.")
+            prepared[relative_path] = modified
+        return prepared
+
     def _extract_archive_files(
         self,
         archive: zipfile.ZipFile,
         install_path: Path,
         backup_dir: Path,
         catalog_entry: dict[str, Any],
+        prepared_files: dict[str, bytes] | None = None,
     ) -> list[str]:
         install_config = catalog_entry.get("install", {})
         strategy = install_config.get("strategy", "extract_archive")
         destination_dir = install_config.get("destination_dir")
+        prepared_files = prepared_files or {}
         installed_files: list[str] = []
 
         if strategy == "extract_archive":
@@ -485,7 +520,9 @@ class Plugin:
                 if member_name not in archive_members:
                     raise RuntimeError(f"The release archive is missing {member_name}.")
                 installed_files.append(
-                    self._extract_archive_member(archive, member_name, install_path, backup_dir, relative_path)
+                    self._extract_archive_member(
+                        archive, member_name, install_path, backup_dir, relative_path, prepared_files.get(relative_path)
+                    )
                 )
             return installed_files
 
@@ -709,7 +746,8 @@ class Plugin:
         backup_dir.mkdir(parents=True, exist_ok=True)
 
         with zipfile.ZipFile(cache_path, "r") as archive:
-            installed_files = self._extract_archive_files(archive, install_path, backup_dir, catalog_entry)
+            prepared_files = self._prepare_archive_patches(archive, catalog_entry, profile.get("binary_patches", []))
+            installed_files = self._extract_archive_files(archive, install_path, backup_dir, catalog_entry, prepared_files)
 
         config = catalog_entry.get("config")
         if config:

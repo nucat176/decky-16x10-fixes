@@ -19,6 +19,11 @@ import main
 REPO_ROOT = Path(__file__).resolve().parents[1]
 APPID = 3259780
 CONFIG_PATH = "FFRS/Binaries/Win64/scripts/final_fantasy_resonance_fix.toml"
+FIX_PATH = "FFRS/Binaries/Win64/scripts/final_fantasy_resonance_fix.asi"
+ORIGINAL_PAYLOAD = b"BA 00 00 00 00 90 90 90"
+HORIZONTAL_PAYLOAD = b"BA 01 00 00 00 90 90 90"
+UPSTREAM_FIX = b"MZ-test-fix\0" + ORIGINAL_PAYLOAD + b"\0other mod data"
+ADJUSTED_FIX = UPSTREAM_FIX.replace(ORIGINAL_PAYLOAD, HORIZONTAL_PAYLOAD)
 UPSTREAM_CONFIG = """# Keep unmanaged settings and comments.
 super_enable = false
 
@@ -75,10 +80,13 @@ class ResonanceInstallTests(unittest.TestCase):
         archive_path = self.plugin.cache_dir / self.entry["source"]["asset_name"]
         with zipfile.ZipFile(archive_path, "w") as archive:
             archive.writestr("winmm.dll", b"MZ-test-loader")
-            archive.writestr("scripts/final_fantasy_resonance_fix.asi", b"MZ-test-fix")
+            archive.writestr("scripts/final_fantasy_resonance_fix.asi", UPSTREAM_FIX)
             archive.writestr("scripts/final_fantasy_resonance_fix.toml", UPSTREAM_CONFIG)
             archive.writestr("LICENSES", "test license")
         self.entry["source"]["sha256"] = hashlib.sha256(archive_path.read_bytes()).hexdigest()
+        adjustment = self.entry["profiles"][0]["binary_patches"][0]
+        adjustment["sha256_before"] = hashlib.sha256(UPSTREAM_FIX).hexdigest()
+        adjustment["sha256_after"] = hashlib.sha256(ADJUSTED_FIX).hexdigest()
 
     def test_scan_install_and_uninstall_restore_existing_game_files(self) -> None:
         loader_path = self.game_dir / "FFRS/Binaries/Win64/winmm.dll"
@@ -109,6 +117,7 @@ class ResonanceInstallTests(unittest.TestCase):
         self.assertEqual(result["launch_option"], 'WINEDLLOVERRIDES="winmm=n,b" %command%')
         self.assertIn("1920x1200", result["profile_label"])
         self.assertEqual(len(result["managed_files"]), 4)
+        self.assertEqual((self.game_dir / FIX_PATH).read_bytes(), ADJUSTED_FIX)
         for relative_path in result["managed_files"]:
             self.assertTrue((self.game_dir / relative_path).is_file())
         after = self.plugin._scan_library_sync()["supported_games"][0]
@@ -127,9 +136,40 @@ class ResonanceInstallTests(unittest.TestCase):
         self.plugin._install_auto_fix_sync(APPID)
         config_path = self.game_dir / CONFIG_PATH
         config_path.write_text(UPSTREAM_CONFIG, encoding="utf-8")
+        (self.game_dir / FIX_PATH).write_bytes(UPSTREAM_FIX)
         self.plugin._install_auto_fix_sync(APPID)
         config = tomllib.loads(config_path.read_text(encoding="utf-8"))
         self.assertFalse(config["hud"]["enable"])
+        self.assertEqual((self.game_dir / FIX_PATH).read_bytes(), ADJUSTED_FIX)
+
+    def test_adjustment_validation_failure_does_not_change_existing_game_files(self) -> None:
+        loader = self.game_dir / "FFRS/Binaries/Win64/winmm.dll"
+        config = self.game_dir / CONFIG_PATH
+        fix = self.game_dir / FIX_PATH
+        config.parent.mkdir(parents=True)
+        loader.write_bytes(b"existing-loader")
+        config.write_bytes(b"existing-config")
+        fix.write_bytes(b"existing-fix")
+        adjustment = self.entry["profiles"][0]["binary_patches"][0]
+        valid = dict(adjustment)
+        invalid_fields = (
+            ("sha256_before", "0" * 64),
+            ("sha256_after", "0" * 64),
+            ("find_ascii", "missing payload"),
+            ("replace_ascii", "wrong size"),
+            ("path", "FFRS/Binaries/Win64/FFRS-Win64-Shipping.exe"),
+        )
+        for field, value in invalid_fields:
+            with self.subTest(field=field):
+                adjustment.clear()
+                adjustment.update(valid)
+                adjustment[field] = value
+                with self.assertRaises(RuntimeError):
+                    self.plugin._install_auto_fix_sync(APPID)
+                self.assertEqual(loader.read_bytes(), b"existing-loader")
+                self.assertEqual(config.read_bytes(), b"existing-config")
+                self.assertEqual(fix.read_bytes(), b"existing-fix")
+                self.assertIsNone(self.plugin._load_install_record(APPID))
 
 
 class TomlConfigTests(unittest.TestCase):
