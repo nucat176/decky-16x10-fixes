@@ -599,6 +599,50 @@ class Plugin:
         with config_path.open("w", encoding="utf-8") as handle:
             handle.writelines(output_lines)
 
+    def _apply_toml_updates(self, config_path: Path, updates: dict[str, dict[str, Any]]) -> None:
+        """Patch scalar values in TOML tables; an empty table name selects root keys."""
+        pending = {section: dict(values) for section, values in updates.items()}
+        current_section = ""
+        output_lines: list[str] = []
+
+        def serialise(value: Any) -> str:
+            if not isinstance(value, (bool, int, float, str)):
+                raise RuntimeError("TOML config updates must contain scalar values.")
+            return json.dumps(value, ensure_ascii=False, allow_nan=False)
+
+        def append_missing_keys(section: str) -> None:
+            values = pending.pop(section, {})
+            if values and output_lines and not output_lines[-1].endswith("\n"):
+                output_lines[-1] += "\n"
+            for key, value in values.items():
+                output_lines.append(f"{key} = {serialise(value)}\n")
+
+        for line in config_path.read_text(encoding="utf-8-sig").splitlines(keepends=True):
+            section_match = re.match(r"\s*\[(.+?)\]\s*(?:#.*)?$", line)
+            if section_match:
+                append_missing_keys(current_section)
+                current_section = section_match.group(1).strip()
+                output_lines.append(line)
+                continue
+
+            key_match = re.match(r"(\s*([A-Za-z0-9_-]+)\s*=\s*)(.*)$", line)
+            section_updates = pending.get(current_section, {})
+            if key_match and key_match.group(2) in section_updates:
+                value = section_updates.pop(key_match.group(2))
+                output_lines.append(f"{key_match.group(1)}{serialise(value)}\n")
+            else:
+                output_lines.append(line)
+
+        append_missing_keys(current_section)
+        for section in list(pending):
+            if pending[section]:
+                if output_lines and not output_lines[-1].endswith("\n"):
+                    output_lines[-1] += "\n"
+                output_lines.append(f"\n[{section}]\n")
+                append_missing_keys(section)
+
+        config_path.write_text("".join(output_lines), encoding="utf-8")
+
     def _apply_config_updates(self, config_path: Path, config_type: str, updates: dict[str, Any]) -> None:
         if config_type == "key_value":
             self._apply_key_value_updates(config_path, updates)
@@ -606,6 +650,10 @@ class Plugin:
 
         if config_type == "ini":
             self._apply_ini_updates(config_path, updates)
+            return
+
+        if config_type == "toml":
+            self._apply_toml_updates(config_path, updates)
             return
 
         raise RuntimeError(f'Unsupported config type: {config_type}')

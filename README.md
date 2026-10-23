@@ -34,6 +34,9 @@ Right now it supports:
 
 The long-term goal is still a broader library scanner, but every supported title should have a real, tested install flow.
 
+An experimental `Final Fantasy Resonance` profile is also available for Legion Go 2 testing at
+`1920x1200`. Its SteamOS gameplay, HUD and cutscene behavior still need on-device verification.
+
 ## What This Plugin Does
 
 When you install a supported game from the plugin, it will:
@@ -47,6 +50,9 @@ When you install a supported game from the plugin, it will:
 Current launch options by game:
 
 ```text
+Final Fantasy Resonance (Experimental)
+WINEDLLOVERRIDES="winmm=n,b" %command%
+
 Dragon Quest VII Reimagined
 WINEDLLOVERRIDES="dsound=n,b" %command%
 
@@ -85,6 +91,7 @@ This is not a universal "force any game to 16:10" tool yet.
 Please keep these expectations in mind:
 
 - Some games only fix gameplay and still have odd cutscenes or overlays.
+- Final Fantasy Resonance pins the full-game fix v0.3.0 and disables HUD constraining to avoid its reported battle-transition crash. The test profile does not force a render resolution or mark HUD/movie behavior as verified.
 - Dragon Quest VII Reimagined can disable in-engine cutscene letterboxing, but this plugin does not mark pre-rendered movie playback as fixed.
 - FF7 is much better with the fix installed, but some transitions can still look wrong.
 - FF16 is demanding, so higher internal resolutions can cost a lot of performance on handhelds.
@@ -160,6 +167,21 @@ The plugin will handle the file install, apply the curated preset, and try to ad
 If SteamOS refuses the automatic launch-option update, use the `Copy Launch Option`
 button in the game's `Technical Details` panel and paste it into Steam `Properties` → `Launch Options`.
 
+## Testing Final Fantasy Resonance on Legion Go 2
+
+1. Close the game, install this plugin ZIP through Decky, and press `Rescan`.
+2. Select `Final Fantasy Resonance (Experimental)` and press `Install Fix`.
+3. Select `1920x1200` in Steam/game display settings. This profile uses the selected resolution;
+   it does not add a custom resolution to the game's settings.
+4. Confirm the launch option is `WINEDLLOVERRIDES="winmm=n,b" %command%`. If it was not applied,
+   copy it from `Advanced` into the game's Steam launch options.
+5. Check exploration, multiple battle transitions, HUD edges, menus and cutscenes. Pre-rendered
+   movies intentionally retain the upstream 16:9 correction and may have black bars.
+
+The profile explicitly sets `[hud] enable = false` in
+`FFRS/Binaries/Win64/scripts/final_fantasy_resonance_fix.toml`. Reinstalling reapplies that setting.
+Use `Uninstall fix` to remove the managed files and restore files backed up during installation.
+
 ## Debug Mode
 
 If install still fails:
@@ -228,6 +250,13 @@ The folder should contain at least:
 Then restart Decky Loader or reboot the Steam Deck.
 
 ## Files The Plugin Currently Manages
+
+For `Final Fantasy Resonance (Experimental)`:
+
+- `FFRS/Binaries/Win64/winmm.dll`
+- `FFRS/Binaries/Win64/scripts/final_fantasy_resonance_fix.asi`
+- `FFRS/Binaries/Win64/scripts/final_fantasy_resonance_fix.toml`
+- `FFRS/Binaries/Win64/LICENSES`
 
 For `Dragon Quest VII Reimagined`:
 
@@ -301,6 +330,7 @@ This first version is intentionally narrow:
 
 - one curated catalog file
 - ten supported titles
+- one experimental Final Fantasy Resonance test profile
 - scan, install, reinstall, and uninstall support
 - beginner-friendly workflow in Game Mode
 
@@ -315,6 +345,7 @@ The product only gets more useful if users can trust that "supported" really mea
 - DQ7RFix by Lyall: [https://codeberg.org/Lyall/DQ7RFix](https://codeberg.org/Lyall/DQ7RFix)
 - FF7RemakeFix by Lyall: [https://github.com/Lyall/FF7RemakeFix](https://github.com/Lyall/FF7RemakeFix)
 - FFXVIFix by Lyall: [https://codeberg.org/Lyall/FFXVIFix](https://codeberg.org/Lyall/FFXVIFix)
+- Final Fantasy Resonance Fix by PolarWizard: [https://github.com/PolarWizard/final-fantasy-resonance-fix](https://github.com/PolarWizard/final-fantasy-resonance-fix)
 - OctopathFix by Lyall: [https://github.com/Lyall/OctopathFix](https://github.com/Lyall/OctopathFix)
 - Octopath2Fix by Lyall: [https://github.com/Lyall/Octopath2Fix](https://github.com/Lyall/Octopath2Fix)
 - P3RFix by Lyall: [https://codeberg.org/Lyall/P3RFix](https://codeberg.org/Lyall/P3RFix)
