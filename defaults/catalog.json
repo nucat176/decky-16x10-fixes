@@ -2,6 +2,76 @@
   "schema_version": 1,
   "games": [
     {
+      "appid": 3259780,
+      "slug": "final-fantasy-resonance",
+      "title": "FINAL FANTASY RESONANCE",
+      "display_title": "Final Fantasy Resonance (Experimental)",
+      "source": {
+        "name": "Final Fantasy Resonance Fix",
+        "repo": "PolarWizard/final-fantasy-resonance-fix",
+        "version": "0.3.0",
+        "source_url": "https://github.com/PolarWizard/final-fantasy-resonance-fix/releases/tag/0.3.0",
+        "download_url": "https://github.com/PolarWizard/final-fantasy-resonance-fix/releases/download/0.3.0/final-fantasy-resonance-fix_0.3.0.zip",
+        "asset_name": "final-fantasy-resonance-fix_0.3.0.zip",
+        "sha256": "44cbed92f87027b3a7f5ea4bfd2b31810042444c1cb5d21e8b0f1dd6ecde0e65"
+      },
+      "auto_profile_id": "legion-go-2-1920x1200-test",
+      "install": {
+        "strategy": "extract_archive",
+        "destination_dir": "FFRS/Binaries/Win64"
+      },
+      "managed_files": [
+        "FFRS/Binaries/Win64/winmm.dll",
+        "FFRS/Binaries/Win64/scripts/final_fantasy_resonance_fix.asi",
+        "FFRS/Binaries/Win64/scripts/final_fantasy_resonance_fix.toml",
+        "FFRS/Binaries/Win64/LICENSES"
+      ],
+      "config": {
+        "type": "toml",
+        "path": "FFRS/Binaries/Win64/scripts/final_fantasy_resonance_fix.toml"
+      },
+      "launch_options": {
+        "required": "WINEDLLOVERRIDES=\"winmm=n,b\" %command%",
+        "token": "winmm=n,b"
+      },
+      "supports": {
+        "gameplay_aspect_fix": true,
+        "hud_fix": false,
+        "movie_fix": false,
+        "custom_resolution": false
+      },
+      "install_notes": [
+        "Experimental Legion Go 2 test profile: select 1920x1200 in Steam/game display settings before playing. The mod uses the selected resolution; the plugin does not force a render size.",
+        "Installs the full-game v0.3.0 aspect-ratio fix with HUD constraining disabled.",
+        "Movies keep the upstream 16:9 correction enabled; pre-rendered videos may still have black bars.",
+        "SteamOS/Proton needs the winmm Wine override. The plugin will try to add it to launch options for you."
+      ],
+      "known_issues": [
+        "Full-game gameplay, HUD and cutscenes at 1920x1200 on Legion Go 2/SteamOS still need on-device testing.",
+        "Enabling HUD constraining can crash v0.3.0 during battle transitions. Reinstalling this profile reapplies HUD constraining off.",
+        "HUD and movie fixes are not marked as verified for this test profile."
+      ],
+      "profiles": [
+        {
+          "id": "legion-go-2-1920x1200-test",
+          "label": "Legion Go 2 1920x1200 (Test)",
+          "description": "Choose 1920x1200 in Steam/game display settings. Applies the aspect-ratio fix with HUD constraining disabled.",
+          "resolution": "In-game",
+          "config_updates": {
+            "": {
+              "super_enable": true
+            },
+            "movies": {
+              "enable": true
+            },
+            "hud": {
+              "enable": false
+            }
+          }
+        }
+      ]
+    },
+    {
       "appid": 1462040,
       "slug": "ff7-remake",
       "title": "FINAL FANTASY VII REMAKE INTERGRADE",
