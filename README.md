@@ -36,6 +36,8 @@ The long-term goal is still a broader library scanner, but every supported title
 
 An experimental `Final Fantasy Resonance` profile is also available for Legion Go 2 testing at
 `1920x1200`. Its SteamOS gameplay, HUD and cutscene behavior still need on-device verification.
+The camera-test prerelease targets preserving horizontal view and revealing additional content
+vertically after the v0.1.18 test reported image compression or reduced horizontal visibility.
 
 ## What This Plugin Does
 
@@ -171,6 +173,7 @@ button in the game's `Technical Details` panel and paste it into Steam `Properti
 
 1. Close the game, install this plugin ZIP through Decky, and press `Rescan`.
 2. Select `Final Fantasy Resonance (Experimental)` and press `Install Fix`.
+   If updating from v0.1.18, press `Reinstall Fix` to apply the new camera adjustment.
 3. Select `1920x1200` in Steam/game display settings. This profile uses the selected resolution;
    it does not add a custom resolution to the game's settings.
 4. Confirm the launch option is `WINEDLLOVERRIDES="winmm=n,b" %command%`. If it was not applied,
@@ -181,6 +184,13 @@ button in the game's `Technical Details` panel and paste it into Steam `Properti
 The profile explicitly sets `[hud] enable = false` in
 `FFRS/Binaries/Win64/scripts/final_fantasy_resonance_fix.toml`. Reinstalling reapplies that setting.
 Use `Uninstall fix` to remove the managed files and restore files backed up during installation.
+
+The camera-test prerelease changes the upstream mod's `MaintainYFOV` patch payload to
+`MaintainXFOV`. The plugin checks the upstream ASI hash, requires one matching payload, and
+checks the adjusted ASI hash before installing any files. HUD constraining stays disabled.
+This is an unverified camera experiment, not a confirmed fix for image distortion. Compare
+the same scene and character proportions with v0.1.18; the expected result is the same horizontal
+view with additional scenery above and below. Keep SteamOS scaling on Auto or Fit.
 
 ## Debug Mode
 
